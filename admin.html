@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Excellence Award RSVP Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF0F5; --panel: #ffffff; --ink: #171721; --muted: #5A6077; --line: #E0E3EC; --head: #0A1D4B;
+    --gold: #CC9E4A; --yes: #1F7A50; --yes-bg: #E2F2E9; --no: #9E0E18; --no-bg: #F8E4E5; --pend: #8a6d12; --pend-bg: #fff4d6;
+    --adm: #0A1D4B; --adm-bg: #E4E8F3; --focus: #CC9E4A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  .top { background: linear-gradient(90deg, #0A1D4B, #14265C 60%, #3A0F2A); color: #F7EBE0; padding: 14px 16px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .top b { font-size: 16px; }
+  .top .meta { color: #a7adc4; font-size: 12px; }
+  .top .sp { flex: 1; }
+  .top button { background: transparent; color: #f3f1ea; border: 1px solid rgba(255,255,255,.35); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  main { max-width: 1280px; margin: 0 auto; padding: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .12s; }
+  .kpi:hover { border-color: var(--gold); box-shadow: 0 6px 18px -10px rgba(10,29,75,.45); transform: translateY(-1px); }
+  .kpi .go { color: var(--gold); font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .det { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0 2px; padding: 10px 12px; background: var(--bg); border-radius: 10px; font-size: 13px; }
+  a.nm { color: var(--ink); font-weight: 600; text-decoration: none; } a.nm:hover { text-decoration: underline; color: var(--head); }
+  .det dt { color: var(--muted); } .det dd { margin: 0; font-weight: 600; word-break: break-word; }
+  .kpi .l { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .kpi .v { font-size: 28px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .s { color: var(--muted); font-size: 12px; }
+  .goal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 12px; }
+  .goal .row { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+  .bar { height: 12px; background: #eceef4; border-radius: 99px; overflow: hidden; margin-top: 8px; position: relative; }
+  .bar i { display: block; height: 100%; float: left; }
+  .bar .y { background: var(--yes); } .bar .n { background: var(--no); }
+  .kpi:first-child { border-top: 3px solid var(--head); } .kpi .v { font-family: "Cormorant Garamond", Georgia, serif; font-size: 34px; line-height: 1.05; }
+  .bar .t { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--gold); }
+  .tabs { display: flex; gap: 4px; margin: 18px 0 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs button { background: none; border: 0; padding: 10px 14px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; font-weight: 500; white-space: nowrap; }
+  .tabs button[aria-selected=true] { color: var(--ink); border-color: var(--gold); }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; padding: 14px; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .tools input, .tools select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; min-width: 0; }
+  .tools input[type=search] { flex: 1 1 220px; }
+  .tools select { flex: 0 1 200px; max-width: 100%; }
+  .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; white-space: nowrap; }
+  .btn.pri { background: var(--head); color: #fff; border-color: var(--head); }
+  .btn.sm { padding: 4px 10px; font-size: 13px; }
+  .tw { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12.5px; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--panel); cursor: pointer; user-select: none; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: #f8f9fc; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .p-yes { background: var(--yes-bg); color: var(--yes); } .p-no { background: var(--no-bg); color: var(--no); }
+  .p-pend { background: var(--pend-bg); color: var(--pend); } .p-adm { background: var(--adm-bg); color: var(--adm); font-weight: 500; }
+  .mini { width: 90px; height: 8px; background: #eceef4; border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 6px; }
+  .mini i { display: block; height: 100%; background: var(--yes); }
+  .sub { color: var(--muted); font-size: 12px; }
+  .count { color: var(--muted); font-size: 13px; margin-left: auto; }
+  .gate { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; color: #F7EBE0;
+    background: radial-gradient(70% 40% at 50% -5%, rgba(226,196,138,.3), transparent 70%), radial-gradient(90% 45% at 50% 112%, rgba(197,3,55,.5), transparent 72%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 8px, rgba(255,255,255,.02) 14px, rgba(0,0,0,.16) 24px) , linear-gradient(180deg, #0A1D4B, #121226 70%, #171721); }
+  .login { width: 100%; max-width: 380px; padding: 28px 24px; border-radius: 24px;
+    background: linear-gradient(155deg, rgba(255,255,255,.15), rgba(255,255,255,.05)); border: 1px solid rgba(247,235,224,.22);
+    -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); box-shadow: 0 40px 70px -30px rgba(2,6,14,.85), inset 0 1px 0 rgba(255,255,255,.28); }
+  .login .plq { display: inline-block; background: rgba(247,235,224,.94); border-radius: 12px; padding: 8px 14px; margin-bottom: 18px; }
+  .login .plq img { width: 120px; display: block; }
+  .login h1 { font: 600 28px/1.1 "Cormorant Garamond", Georgia, serif; margin: 0 0 4px; }
+  .login .sub { color: rgba(247,235,224,.7); }
+  .login label { display: block; margin: 16px 0 7px; font-weight: 600; font-size: 13.5px; }
+  .login input { width: 100%; height: 50px; padding: 0 14px; color: #F7EBE0; background: rgba(255,255,255,.07); border: 1px solid rgba(247,235,224,.3); border-radius: 14px; outline: none; }
+  .login input:focus { border-color: #CC9E4A; box-shadow: 0 0 0 3px rgba(204,158,74,.22); }
+  .login .btn { width: 100%; height: 50px; margin-top: 22px; border: 0; border-radius: 14px; color: #fff; font-weight: 700; font-size: 15px; background: linear-gradient(180deg, #C50337, #9E0E18); box-shadow: 0 12px 24px -10px rgba(197,3,55,.75), inset 0 1px 0 rgba(255,255,255,.28); }
+  .login .err { color: #FF9A9A; }
+  .err { color: var(--no); margin-top: 10px; font-size: 13px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--head); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 13px; z-index: 50; max-width: calc(100% - 32px); }
+  dialog { border: 0; border-radius: 14px; padding: 0; width: min(440px, calc(100% - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  dialog::backdrop { background: rgba(10,29,75,.55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+  .dlg { padding: 20px; }
+  .dlg h3 { margin: 0 0 2px; font-size: 17px; }
+  .dlg label { display: block; margin: 12px 0 5px; font-weight: 500; font-size: 13px; }
+  .dlg select, .dlg input, .dlg textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .seg button { padding: 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
+  .seg button[aria-pressed=true] { border-color: var(--head); background: var(--head); color: #fff; }
+  .dlg .acts { display: flex; gap: 8px; margin-top: 18px; }
+  .dlg .acts .sp { flex: 1; }
+  .linkbtn { background: none; border: 0; color: var(--no); cursor: pointer; padding: 8px 0; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 640px) { .hide-sm { display: none; } .kpi .v { font-size: 24px; } }
+</style>
+</head>
+<body>
+
+<div class="gate" id="login"><section class="login">
+  <span class="plq"><img src="logo.png" alt="Metropolitan"></span>
+  <h1>Attendance dashboard</h1>
+  <div class="sub">Metropolitan Excellence Award and Year End Party</div>
+  <form id="lf">
+    <label for="lu">Username</label><input id="lu" autocomplete="username">
+    <label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password">
+    <button class="btn pri" id="lb">Log in</button>
+    <div class="err" id="le"></div>
+  </form>
+</section></div>
+
+<div id="app" hidden>
+  <div class="top">
+    <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Excellence Award and Year End Party</b>
+    <span class="meta" id="meta"></span>
+    <span class="sp"></span>
+    <button id="xlsx">Download Excel</button>
+    <button id="refresh">Refresh</button>
+    <button id="logout">Log out</button>
+  </div>
+  <main>
+    <div class="kpis" id="kpis"></div>
+    <div class="goal">
+      <div class="row"><span id="goalTxt"></span><span class="sub" id="goalSub"></span></div>
+      <div class="bar" id="goalBar"></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="hod" aria-selected="true">By HOD</button>
+      <button role="tab" data-tab="dept" aria-selected="false">By Department</button>
+      <button role="tab" data-tab="all" aria-selected="false">All staff</button>
+    </div>
+
+    <div class="panel" id="p-group">
+      <div class="tools">
+        <input type="search" id="gq" placeholder="Search name…">
+        <label class="sub"><input type="checkbox" id="gPendOnly"> Only with pending staff</label>
+        <span class="count" id="gCount"></span>
+      </div>
+      <div class="tw"><table id="gt"></table></div>
+      <p class="sub">Click a row to see that group's staff list.</p>
+    </div>
+
+    <div class="panel" id="p-all" hidden>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search employee no., name or reference…">
+        <select id="fStatus">
+          <option value="">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="Attending">Attending</option>
+          <option value="Not attending">Not attending</option>
+          <option value="responded">Responded</option>
+          <option value="admin">Entered by admin</option>
+        </select>
+        <select id="fDept"><option value="">All departments</option></select>
+        <select id="fHod"><option value="">All HODs</option></select>
+      </div>
+      <div class="tools">
+        <button class="btn" id="copyPending">Copy pending list for WhatsApp</button>
+        <button class="btn" id="xlsxF">Download Excel (this view)</button>
+        <button class="btn" id="csv">Download CSV (this view)</button>
+        <button class="btn" id="clearF">Clear filters</button>
+        <span class="count" id="aCount"></span>
+      </div>
+      <div class="tw"><table id="at"></table></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <form class="dlg" id="mf" method="dialog">
+    <h3 id="mName"></h3>
+    <div class="sub" id="mInfo"></div>
+    <dl class="det" id="mDet"></dl>
+    <label>Response</label>
+    <div class="seg" id="mStatus">
+      <button type="button" data-v="Attending" aria-pressed="false">Attending</button>
+      <button type="button" data-v="Not attending" aria-pressed="false">Not attending</button>
+    </div>
+    <label for="mSource">How was this confirmed?</label>
+    <select id="mSource"></select>
+    <label for="mWa">WhatsApp number <span class="sub">(optional)</span></label>
+    <input id="mWa" inputmode="numeric" maxlength="10" placeholder="10 digits, e.g. 0771234567">
+    <label for="mNote">Note <span class="sub">(optional)</span></label>
+    <input id="mNote" maxlength="300" placeholder="e.g. Told Nimal by phone on 28 Oct">
+    <div class="err" id="mErr"></div>
+    <div class="acts">
+      <button type="button" class="linkbtn" id="mClear">Clear response</button>
+      <span class="sp"></span>
+      <button type="button" class="btn" id="mCancel">Cancel</button>
+      <button type="button" class="btn pri" id="mSave">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var TARGET = 0.95;
+  var S = { token: null, admin: '', rows: [], sources: [], tab: 'hod', sort: { k: 'pending', d: -1 }, asort: { k: 'name', d: 1 }, edit: null };
+
+  function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function toast(msg) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+  function pct(a, b) { return b ? Math.round(a * 1000 / b) / 10 : 0; }
+  function prettyWa(w) { return w && w.indexOf('94') === 0 ? '0' + w.slice(2, 4) + ' ' + w.slice(4, 7) + ' ' + w.slice(7) : (w || ''); }
+  function when(iso) { if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return iso; return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Colombo' }); }
+
+  // ---------- auth ----------
+  $('lf').addEventListener('submit', async function (e) {
+    e.preventDefault(); $('le').textContent = '';
+    $('lb').disabled = true; $('lb').textContent = 'Logging in…';
+    var r = await window.rsvpCall({ action: 'login', user: $('lu').value, pass: $('lp').value }, 1);
+    $('lb').disabled = false; $('lb').textContent = 'Log in';
+    if (!r.ok) { $('le').textContent = r.error; return; }
+    S.token = r.token; S.admin = r.name; store('mn_tok', r.token);
+    $('lp').value = '';
+    start();
+  });
+  $('logout').addEventListener('click', function () { store('mn_tok', null); S.token = null; $('app').hidden = true; $('login').hidden = false; });
+
+  async function start() {
+    $('login').hidden = true; $('app').hidden = false;
+    await refresh();
+  }
+
+  async function refresh() {
+    $('refresh').disabled = true; $('refresh').textContent = 'Loading…';
+    var r = await window.rsvpCall({ action: 'dashboard', token: S.token });
+    $('refresh').disabled = false; $('refresh').textContent = 'Refresh';
+    if (!r.ok) {
+      if (r.auth === false) { store('mn_tok', null); $('app').hidden = true; $('login').hidden = false; $('le').textContent = r.error; return; }
+      toast(r.error); return;
+    }
+    S.admin = r.admin; S.sources = r.sources;
+    S.rows = r.rows.map(function (a) { var o = {}; r.cols.forEach(function (c, i) { o[c] = a[i]; }); return o; });
+    $('meta').textContent = 'Signed in as ' + r.admin + '. Updated ' + when(r.generated) + '. ' + (r.open ? 'Staff can respond until ' + when(r.deadline) + '.' : 'Closed for staff responses.');
+    fillFilters(); render();
+  }
+  $('refresh').addEventListener('click', refresh);
+  setInterval(function () { if (S.token && !$('app').hidden && !$('dlg').open && document.visibilityState === 'visible') refresh(); }, 120000);
+
+  // ---------- summary ----------
+  function counts(list) {
+    var c = { total: list.length, yes: 0, no: 0, pend: 0, adm: 0 };
+    list.forEach(function (r) {
+      if (r.status === 'Attending') c.yes++;
+      else if (r.status === 'Not attending') c.no++; else c.pend++;
+      if (r.source && r.source.indexOf('Admin') === 0) c.adm++;
+    });
+    c.resp = c.yes + c.no; return c;
+  }
+
+  function renderKpis() {
+    var c = counts(S.rows), need = Math.ceil(c.total * TARGET);
+    var k = [
+      ['Total staff', c.total, 'MTPL + MATL', ''],
+      ['Responded', c.resp, pct(c.resp, c.total) + '% of staff', 'responded'],
+      ['Attending', c.yes, pct(c.yes, c.total) + '% of staff', 'Attending'],
+      ['Not attending', c.no, pct(c.no, c.total) + '%', 'Not attending'],
+      ['Pending', c.pend, need > c.resp ? (need - c.resp) + ' more to reach 95%' : '95% target reached', 'pending'],
+      ['Admin entered', c.adm, 'verbal / phone / HOD', 'admin']
+    ];
+    $('kpis').innerHTML = k.map(function (x) { return '<button type="button" class="kpi" data-f="' + x[3] + '"><div class="l">' + x[0] + '</div><div class="v">' + x[1] + '</div><div class="s">' + esc(x[2]) + '</div><div class="go">View list</div></button>'; }).join('');
+    $('goalTxt').innerHTML = '<b>' + pct(c.resp, c.total) + '%</b> responded · target 95% = ' + need + ' of ' + c.total;
+    $('goalSub').textContent = 'Green: attending. Red: not attending. Gold line: 95% target.';
+    $('goalBar').innerHTML = '<i class="y" style="width:' + pct(c.yes, c.total) + '%"></i><i class="n" style="width:' + pct(c.no, c.total) + '%"></i><span class="t" style="left:95%" title="95% target"></span>';
+  }
+
+  // ---------- grouped tables ----------
+  function groups(key) {
+    var m = {};
+    S.rows.forEach(function (r) { var g = r[key] || 'Not assigned'; (m[g] = m[g] || []).push(r); });
+    return Object.keys(m).map(function (g) { var c = counts(m[g]); return { name: g, total: c.total, yes: c.yes, no: c.no, pending: c.pend, pct: pct(c.resp, c.total) }; });
+  }
+
+  function renderGroup() {
+    var key = S.tab === 'hod' ? 'hod' : 'dept';
+    var q = $('gq').value.trim().toLowerCase();
+    var list = groups(key).filter(function (g) { return (!q || g.name.toLowerCase().indexOf(q) >= 0) && (!$('gPendOnly').checked || g.pending > 0); });
+    var s = S.sort;
+    list.sort(function (a, b) { var x = a[s.k], y = b[s.k]; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * s.d || a.name.localeCompare(b.name); });
+    var cols = [['name', S.tab === 'hod' ? 'Head of department' : 'Department'], ['total', 'Staff'], ['yes', 'Attending'], ['no', 'Not attending'], ['pending', 'Pending'], ['pct', 'Responded']];
+    var h = '<thead><tr>' + cols.map(function (c) { return '<th data-k="' + c[0] + '"' + (c[0] !== 'name' ? ' class="num"' : '') + '>' + c[1] + (s.k === c[0] ? (s.d > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += list.map(function (g) {
+      return '<tr class="click" data-g="' + esc(g.name) + '"><td>' + esc(g.name) + '</td><td class="num">' + g.total + '</td><td class="num">' + g.yes + '</td><td class="num">' + g.no +
+        '</td><td class="num">' + (g.pending ? '<span class="pill p-pend">' + g.pending + '</span>' : '0') + '</td><td class="num">' + g.pct + '%<span class="mini"><i style="width:' + g.pct + '%"></i></span></td></tr>';
+    }).join('') + '</tbody>';
+    $('gt').innerHTML = h;
+    $('gCount').textContent = list.length + (S.tab === 'hod' ? ' HODs' : ' departments');
+  }
+  $('gt').addEventListener('click', function (e) {
+    var th = e.target.closest('th');
+    if (th) { var k = th.dataset.k; S.sort = { k: k, d: S.sort.k === k ? -S.sort.d : (k === 'name' ? 1 : -1) }; renderGroup(); return; }
+    var tr = e.target.closest('tr[data-g]');
+    if (tr) {
+      $('fHod').value = ''; $('fDept').value = ''; $('fStatus').value = ''; $('q').value = '';
+      if (S.tab === 'hod') $('fHod').value = tr.dataset.g; else $('fDept').value = tr.dataset.g;
+      setTab('all');
+    }
+  });
+  $('gq').addEventListener('input', renderGroup);
+  $('gPendOnly').addEventListener('change', renderGroup);
+
+  // ---------- all staff ----------
+  function fillFilters() {
+    function fill(sel, key, label) {
+      var cur = sel.value, vals = {};
+      S.rows.forEach(function (r) { vals[r[key] || 'Not assigned'] = 1; });
+      sel.innerHTML = '<option value="">' + label + '</option>' + Object.keys(vals).sort().map(function (v) { return '<option>' + esc(v) + '</option>'; }).join('');
+      sel.value = cur;
+    }
+    fill($('fDept'), 'dept', 'All departments'); fill($('fHod'), 'hod', 'All HODs');
+  }
+
+  function filtered() {
+    var q = $('q').value.trim().toLowerCase(), st = $('fStatus').value, d = $('fDept').value, h = $('fHod').value;
+    return S.rows.filter(function (r) {
+      if (q && String(r.emp).indexOf(q) < 0 && r.name.toLowerCase().indexOf(q) < 0 && String(r.ref).toLowerCase().indexOf(q) < 0) return false;
+      if (d && (r.dept || 'Not assigned') !== d) return false;
+      if (h && (r.hod || 'Not assigned') !== h) return false;
+      if (st === 'pending' && r.status) return false;
+      if (st === 'admin' && !(r.source && r.source.indexOf('Admin') === 0)) return false;
+      if (st === 'responded' && !r.status) return false;
+      if (st && st !== 'pending' && st !== 'admin' && st !== 'responded' && r.status !== st) return false;
+      return true;
+    });
+  }
+
+  function renderAll() {
+    var list = filtered(), s = S.asort;
+    list.sort(function (a, b) {
+      var x = a[s.k] || '', y = b[s.k] || '';
+      if (s.k === 'emp') return (parseInt(x, 10) - parseInt(y, 10)) * s.d;
+      return String(x).localeCompare(String(y), undefined, { numeric: true }) * s.d;
+    });
+    var cols = [['emp', 'Emp No'], ['name', 'Name'], ['dept', 'Department'], ['hod', 'HOD'], ['status', 'Status'], ['whatsapp', 'WhatsApp'], ['ref', 'Reference'], ['updated', 'Updated'], ['', '']];
+    var hideSm = { dept: 1, hod: 1, ref: 1, whatsapp: 1, updated: 1 };
+    var h = '<thead><tr>' + cols.map(function (c) { return '<th data-k="' + c[0] + '"' + (hideSm[c[0]] ? ' class="hide-sm"' : '') + '>' + c[1] + (s.k === c[0] && c[0] ? (s.d > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>';
+    h += list.map(function (r) {
+      var pill = r.status === 'Attending' ? '<span class="pill p-yes">Attending</span>' : r.status === 'Not attending' ? '<span class="pill p-no">Not attending</span>' : '<span class="pill p-pend">Pending</span>';
+      var src = r.source && r.source.indexOf('Admin') === 0 ? '<div><span class="pill p-adm" title="' + esc(r.by + (r.note ? ': ' + r.note : '')) + '">' + esc(r.source.replace('Admin - ', 'Admin · ')) + '</span></div>' : '';
+      var noNic = r.canSelf ? '' : '<div class="sub">No NIC on file, admin only</div>';
+      return '<tr><td>' + esc(r.emp) + '</td><td><a href="#" class="nm" data-emp="' + esc(r.emp) + '">' + esc(r.name) + '</a><div class="sub">' + esc(r.designation) + '</div>' + noNic + '</td><td class="hide-sm">' + esc(r.dept) + '</td><td class="hide-sm">' + esc(r.hod) +
+        '</td><td>' + pill + src + '</td><td class="hide-sm">' + esc(prettyWa(r.whatsapp)) + '</td><td class="hide-sm sub" style="font-family:ui-monospace,Consolas,monospace">' + esc(r.ref) + '</td><td class="hide-sm sub">' + esc(when(r.updated)) +
+        '</td><td><button class="btn sm" data-emp="' + esc(r.emp) + '">View / mark</button></td></tr>';
+    }).join('') + '</tbody>';
+    $('at').innerHTML = h;
+    var c = counts(list);
+    $('aCount').textContent = list.length + ' shown · ' + c.yes + ' attending · ' + c.no + ' not · ' + c.pend + ' pending';
+  }
+  $('at').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-emp]'); if (b) { e.preventDefault(); openMark(b.dataset.emp); return; }
+    var th = e.target.closest('th'); if (th && th.dataset.k) { var k = th.dataset.k; S.asort = { k: k, d: S.asort.k === k ? -S.asort.d : 1 }; renderAll(); }
+  });
+  ['q', 'fStatus', 'fDept', 'fHod'].forEach(function (id) { $(id).addEventListener(id === 'q' ? 'input' : 'change', renderAll); });
+  $('clearF').addEventListener('click', function () { $('q').value = ''; $('fStatus').value = ''; $('fDept').value = ''; $('fHod').value = ''; renderAll(); });
+
+  $('copyPending').addEventListener('click', function () {
+    var list = filtered().filter(function (r) { return !r.status; });
+    if (!list.length) { toast('No pending staff in this view.'); return; }
+    var base = 'Pending confirmations - Excellence Award & Year End Party'; var head = $('fHod').value ? base + ', team of ' + $('fHod').value : $('fDept').value ? base + ', ' + $('fDept').value : base;
+    var txt = head + ' (' + list.length + '):\n' + list.map(function (r, i) { return (i + 1) + '. ' + r.emp + ' - ' + r.name; }).join('\n') +
+      '\n\nPlease confirm at ' + location.href.replace(/admin\.html.*$/, '') + ' before the deadline.';
+    copy(txt);
+  });
+  function copy(txt) {
+    var done = function () { toast('Copied. Paste it into WhatsApp.'); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+    function fallback() { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Copy failed'); } ta.remove(); }
+  }
+
+  // ---------- Excel export (.xlsx built in the browser, no external library) ----------
+  var XL = (function () {
+    var crcT = (function () { var t = [], c; for (var n = 0; n < 256; n++) { c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+    function crc(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = crcT[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    function u8(str) { return new TextEncoder().encode(str); }
+    function zip(files) {
+      var parts = [], central = [], off = 0;
+      files.forEach(function (f) {
+        var name = u8(f.name), data = u8(f.data), c = crc(data), h = new DataView(new ArrayBuffer(30));
+        h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, c, true);
+        h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+        parts.push(new Uint8Array(h.buffer), name, data);
+        var cd = new DataView(new ArrayBuffer(46));
+        cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint32(16, c, true);
+        cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true); cd.setUint16(28, name.length, true); cd.setUint32(42, off, true);
+        central.push(new Uint8Array(cd.buffer), name);
+        off += 30 + name.length + data.length;
+      });
+      var cdSize = central.reduce(function (a, b) { return a + b.length; }, 0), end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+      end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+      return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+    function x(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function col(i) { var s = ''; i++; while (i) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+    function sheetXml(sh) {
+      var rows = [sh.head].concat(sh.rows);
+      var cols = '<cols>' + sh.widths.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('') + '</cols>';
+      var body = rows.map(function (r, ri) {
+        return '<row r="' + (ri + 1) + '">' + r.map(function (v, ci) {
+          return '<c r="' + col(ci) + (ri + 1) + '" t="inlineStr"' + (ri === 0 ? ' s="1"' : '') + '><is><t xml:space="preserve">' + x(v) + '</t></is></c>';
+        }).join('') + '</row>';
+      }).join('');
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' + cols + '<sheetData>' + body + '</sheetData>' +
+        '<autoFilter ref="A1:' + col(sh.head.length - 1) + Math.max(1, rows.length) + '"/></worksheet>';
+    }
+    return function (filename, sheets) {
+      var ns = 'http://schemas.openxmlformats.org/', files = [
+        { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="' + ns + 'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+          sheets.map(function (s, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('') + '</Types>' },
+        { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="' + ns + 'package/2006/relationships"><Relationship Id="rId1" Type="' + ns + 'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+        { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="' + ns + 'spreadsheetml/2006/main" xmlns:r="' + ns + 'officeDocument/2006/relationships"><sheets>' +
+          sheets.map(function (s, i) { return '<sheet name="' + x(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join('') + '</sheets>' +
+          '<definedNames>' + sheets.map(function (s, i) { return '<definedName name="_xlnm._FilterDatabase" localSheetId="' + i + '" hidden="1">\'' + x(s.name) + '\'!$A$1:$' + col(s.head.length - 1) + '$' + Math.max(1, s.rows.length + 1) + '</definedName>'; }).join('') + '</definedNames></workbook>' },
+        { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="' + ns + 'package/2006/relationships">' +
+          sheets.map(function (s, i) { return '<Relationship Id="rId' + (i + 1) + '" Type="' + ns + 'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>'; }).join('') +
+          '<Relationship Id="rId' + (sheets.length + 1) + '" Type="' + ns + 'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+        { name: 'xl/styles.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="' + ns + 'spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0A1D4B"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
+      ];
+      sheets.forEach(function (s, i) { files.push({ name: 'xl/worksheets/sheet' + (i + 1) + '.xml', data: sheetXml(s) }); });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(zip(files)); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    };
+  })();
+
+  function stamp() {
+    var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '_' + p(d.getHours()) + p(d.getMinutes());
+  }
+  var XHEAD = ['Emp No', 'Name', 'WhatsApp No', 'Department', 'HOD'];
+  function xrow(r) { return [r.emp, r.name, prettyWa(r.whatsapp), r.dept, r.hod]; }
+  function bySort(a, b) { return String(a.hod).localeCompare(String(b.hod)) || String(a.dept).localeCompare(String(b.dept)) || String(a.emp).localeCompare(String(b.emp)); }
+
+  $('xlsx').addEventListener('click', function () {
+    if (!S.rows.length) { toast('No data loaded yet.'); return; }
+    var conf = S.rows.filter(function (r) { return r.status; }).sort(bySort);
+    var pend = S.rows.filter(function (r) { return !r.status; }).sort(bySort);
+    XL('Excellence-Award-RSVP_' + stamp() + '.xlsx', [
+      { name: 'Confirmed (' + conf.length + ')', head: XHEAD.concat(['Response']), widths: [10, 32, 15, 32, 32, 15], rows: conf.map(function (r) { return xrow(r).concat([r.status]); }) },
+      { name: 'Not confirmed (' + pend.length + ')', head: XHEAD, widths: [10, 32, 15, 32, 32], rows: pend.map(xrow) }
+    ]);
+    toast('Excel downloaded: ' + conf.length + ' confirmed, ' + pend.length + ' not confirmed.');
+  });
+  $('xlsxF').addEventListener('click', function () {
+    var list = filtered();
+    if (!list.length) { toast('Nothing in this view to download.'); return; }
+    XL('Excellence-Award-RSVP_view_' + stamp() + '.xlsx', [
+      { name: 'Staff (' + list.length + ')', head: XHEAD.concat(['Response']), widths: [10, 32, 15, 32, 32, 15], rows: list.slice().sort(bySort).map(function (r) { return xrow(r).concat([r.status || 'Not confirmed']); }) }
+    ]);
+  });
+
+  $('csv').addEventListener('click', function () {
+    var cols = ['emp', 'name', 'designation', 'dept', 'company', 'hod', 'status', 'whatsapp', 'source', 'by', 'note', 'updated', 'ref'];
+    var lines = [cols.join(',')].concat(filtered().map(function (r) { return cols.map(function (c) { var v = c === 'status' && !r[c] ? 'Pending' : String(r[c] == null ? '' : r[c]); return '"' + v.replace(/"/g, '""') + '"'; }).join(','); }));
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'excellence-award-rsvp-' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  // ---------- mark dialog ----------
+  var M = { status: '' };
+  function seg(id, v) { $(id).querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false'); }); }
+  function mStatus(v) { M.status = v; seg('mStatus', v); }
+  $('mStatus').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) mStatus(b.dataset.v); });
+
+  function openMark(emp) {
+    var r = S.rows.find(function (x) { return String(x.emp) === String(emp); }); if (!r) return;
+    S.edit = r;
+    $('mName').textContent = r.emp + ' · ' + r.name;
+    $('mInfo').textContent = [r.designation, r.dept, 'HOD: ' + r.hod].filter(Boolean).join(' · ');
+    var det = [['Employee no.', r.emp], ['Company', r.company], ['Response', r.status || 'Pending'], ['Reference', r.ref || '-'], ['WhatsApp', prettyWa(r.whatsapp) || '-'],
+      ['Confirmed by', r.status ? (r.source === 'Self' ? 'Employee (online)' : r.source.replace('Admin - ', 'Admin, ') + (r.by ? ' (' + r.by + ')' : '')) : '-'], ['Note', r.note || '-'], ['Last updated', r.updated ? when(r.updated) : '-'],
+      ['Online check', r.canSelf ? 'NIC on file' : 'No NIC on file, admin only']];
+    $('mDet').innerHTML = det.map(function (d) { return '<dt>' + d[0] + '</dt><dd>' + esc(d[1]) + '</dd>'; }).join('');
+    $('mSource').innerHTML = '<option value="">Choose…</option>' + S.sources.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('');
+    mStatus(r.status || '');
+    $('mWa').value = r.whatsapp ? '0' + String(r.whatsapp).slice(2) : ''; $('mNote').value = ''; $('mErr').textContent = '';
+    $('mClear').hidden = !r.status;
+    $('dlg').showModal();
+  }
+  $('mWa').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+  $('mCancel').addEventListener('click', function () { $('dlg').close(); });
+
+  async function saveMark(payload) {
+    $('mSave').disabled = true; $('mClear').disabled = true;
+    var r = await window.rsvpCall(Object.assign({ action: 'mark', token: S.token, emp: S.edit.emp }, payload), 2);
+    $('mSave').disabled = false; $('mClear').disabled = false;
+    if (!r.ok) { if (r.auth === false) { $('dlg').close(); store('mn_tok', null); $('app').hidden = true; $('login').hidden = false; $('le').textContent = r.error; return; } $('mErr').textContent = r.error; return; }
+    $('dlg').close(); toast(r.cleared ? 'Response cleared.' : 'Saved.'); refresh();
+  }
+  $('mSave').addEventListener('click', function () {
+    if (!M.status) { $('mErr').textContent = 'Choose Attending or Not attending.'; return; }
+    if (!$('mSource').value) { $('mErr').textContent = 'Choose how this was confirmed.'; return; }
+    saveMark({ status: M.status, source: $('mSource').value, whatsapp: $('mWa').value.replace(/\D/g, ''), note: $('mNote').value });
+  });
+  $('mClear').addEventListener('click', function () {
+    if (!S.edit.status) return;
+    $('mClear').textContent = $('mClear').dataset.armed ? 'Clear response' : 'Click again to clear';
+    if (!$('mClear').dataset.armed) { $('mClear').dataset.armed = '1'; setTimeout(function () { delete $('mClear').dataset.armed; $('mClear').textContent = 'Clear response'; }, 3000); return; }
+    delete $('mClear').dataset.armed; $('mClear').textContent = 'Clear response';
+    saveMark({ status: 'Clear', note: $('mNote').value });
+  });
+
+  // ---------- tabs ----------
+  function setTab(t) {
+    S.tab = t;
+    document.querySelectorAll('.tabs button').forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'); });
+    $('p-group').hidden = t === 'all'; $('p-all').hidden = t !== 'all';
+    render();
+  }
+  document.querySelector('.tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setTab(b.dataset.tab); });
+
+  $('kpis').addEventListener('click', function (e) {
+    var t = e.target.closest('.kpi'); if (!t) return;
+    $('q').value = ''; $('fDept').value = ''; $('fHod').value = ''; $('fStatus').value = t.dataset.f;
+    setTab('all');
+    $('p-all').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function render() { renderKpis(); if (S.tab === 'all') renderAll(); else renderGroup(); }
+
+  var saved = load('mn_tok');
+  if (saved) { S.token = saved; start(); }
+})();
+</script>
+</body>
+</html>

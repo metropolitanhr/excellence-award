@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1D4B">
+<title>Metropolitan Excellence Award 2026 | Confirm your participation</title>
+<meta name="description" content="Confirm your participation for the Metropolitan Excellence Award and Year End Party, 20th November 2026 at Monarch Imperial.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0A1D4B;
+    --crimson: #9E0E18;
+    --crimson-hi: #C50337;
+    --gold: #CC9E4A;
+    --gold-soft: #E2C48A;
+    --ivory: #F7EBE0;
+    --obsidian: #171721;
+    --ink-2: rgba(247, 235, 224, .74);
+    --ink-3: rgba(247, 235, 224, .55);
+    --glass-line: rgba(247, 235, 224, .22);
+    --err: #FF9A9A;
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: Manrope, "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh; min-height: 100dvh;
+    background: var(--obsidian); color: var(--ivory);
+    font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased;
+    padding: 0 16px 40px; overflow-x: hidden;
+  }
+
+  /* ---------- Stage backdrop: velvet curtains, gold spotlight, crimson floor ---------- */
+  .stage { position: fixed; inset: 0; height: 100lvh; z-index: -1; overflow: hidden;
+    background:
+      radial-gradient(70% 38% at 50% -4%, rgba(226, 196, 138, .34), rgba(204, 158, 74, .08) 55%, transparent 75%),
+      radial-gradient(90% 45% at 50% 112%, rgba(197, 3, 55, .55), rgba(158, 14, 24, .18) 55%, transparent 75%),
+      linear-gradient(180deg, var(--navy) 0%, #0C1838 42%, #121226 72%, var(--obsidian) 100%); }
+  .curtain { position: absolute; top: -5%; bottom: -5%; width: 34%; opacity: .9; filter: blur(1.5px);
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.34) 0 7px, rgba(255,255,255,.035) 13px, rgba(0,0,0,.28) 22px, rgba(0,0,0,.42) 30px),
+      linear-gradient(180deg, #5E0A12 0%, var(--crimson) 40%, #4A0710 100%); }
+  .curtain.l { left: -10%; transform: skewX(-4deg); -webkit-mask-image: linear-gradient(90deg, #000 30%, transparent 100%); mask-image: linear-gradient(90deg, #000 30%, transparent 100%); }
+  .curtain.r { right: -10%; transform: skewX(4deg); -webkit-mask-image: linear-gradient(270deg, #000 30%, transparent 100%); mask-image: linear-gradient(270deg, #000 30%, transparent 100%); }
+  .beam { position: absolute; top: -10%; left: 50%; width: 120vmax; height: 120vh; transform: translateX(-50%);
+    background: conic-gradient(from 180deg at 50% 0%, transparent 168deg, rgba(247, 235, 224, .07) 176deg, rgba(247, 235, 224, .11) 180deg, rgba(247, 235, 224, .07) 184deg, transparent 192deg);
+    animation: beamIn 1.6s ease-out both; }
+  .bokeh { position: absolute; border-radius: 50%; filter: blur(22px); }
+  .bokeh.a { width: 180px; height: 180px; left: 8%; top: 30%; background: rgba(204, 158, 74, .32); }
+  .bokeh.b { width: 220px; height: 220px; right: 4%; top: 52%; background: rgba(197, 3, 55, .38); }
+  .bokeh.c { width: 140px; height: 140px; left: 42%; top: 70%; background: rgba(204, 158, 74, .22); }
+  .grain { position: absolute; inset: 0; opacity: .09; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+  .wrap { max-width: 440px; margin: 0 auto; position: relative; }
+
+  /* ---------- Header: logo plaque + invitation lockup ---------- */
+  .plaque { display: flex; flex-direction: column; align-items: center; gap: 2px;
+    width: max-content; max-width: 100%; margin: 28px auto 0; padding: 12px 22px 10px;
+    background: rgba(247, 235, 224, .94); border-radius: 16px;
+    box-shadow: 0 10px 30px -12px rgba(2, 6, 14, .8), inset 0 -1px 0 rgba(204, 158, 74, .45); }
+  .plaque img { width: 150px; height: auto; display: block; }
+  .plaque span { font-size: 11px; color: #3B3F52; letter-spacing: .02em; }
+
+  .invite { text-align: center; margin: 30px 0 26px; animation: rise .9s .15s cubic-bezier(.2, .7, .2, 1) both; }
+  .invite .pre { font-family: var(--serif); font-style: italic; font-size: 18px; color: var(--gold-soft); margin: 0 0 6px; }
+  .invite h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(34px, 9.5vw, 44px); line-height: 1.02; margin: 0; letter-spacing: -.005em; color: var(--ivory); }
+  .invite .sub { font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 6px 0 0; color: var(--ink-2); }
+  .flourish { display: block; margin: 18px auto 0; width: 132px; height: 12px; }
+
+  .details { display: grid; grid-template-columns: 1.3fr 1fr 1.1fr; margin: 20px auto 0; max-width: 400px; }
+  .details div { padding: 2px 10px; }
+  .details div + div { border-left: 1px solid rgba(204, 158, 74, .45); }
+  .details dt { font-size: 12px; color: var(--gold); font-weight: 600; margin: 0 0 2px; }
+  .details dd { margin: 0; font-size: 14.5px; font-weight: 500; line-height: 1.35; color: var(--ivory); }
+
+  /* ---------- Glass panel ---------- */
+  .glass {
+    position: relative; border-radius: 24px; padding: 26px 22px 24px;
+    background: linear-gradient(155deg, rgba(255, 255, 255, .15) 0%, rgba(255, 255, 255, .06) 45%, rgba(255, 255, 255, .04) 100%);
+    border: 1px solid var(--glass-line);
+    -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: 0 40px 70px -30px rgba(2, 6, 14, .85), inset 0 1px 0 rgba(255, 255, 255, .28);
+    animation: rise .9s .3s cubic-bezier(.2, .7, .2, 1) both;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: rgba(18, 28, 64, .92); } }
+
+  .step { font-size: 12.5px; color: var(--gold-soft); margin: 0 0 4px; font-weight: 500; }
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.1; margin: 0 0 8px; }
+  .hint { color: var(--ink-2); font-size: 14px; margin: 0 0 18px; }
+  .hint b { color: var(--ivory); font-weight: 600; }
+
+  label.f { display: block; font-size: 13.5px; font-weight: 600; margin: 16px 0 7px; color: var(--ivory); }
+  label.f small { font-weight: 400; color: var(--ink-3); }
+  .field { position: relative; }
+  .field svg { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; stroke: var(--ink-2); fill: none; stroke-width: 1.6; pointer-events: none; }
+  input[type=text], input[type=tel] {
+    width: 100%; height: 54px; padding: 0 48px 0 16px; font: 500 17px/1 var(--sans); letter-spacing: .04em; color: var(--ivory);
+    background: rgba(255, 255, 255, .07); border: 1px solid rgba(247, 235, 224, .3); border-radius: 14px; outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  input::placeholder { color: var(--ink-3); letter-spacing: .02em; }
+  input:focus { border-color: var(--gold); background: rgba(255, 255, 255, .11); box-shadow: 0 0 0 3px rgba(204, 158, 74, .22); }
+  .helper { font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+
+  .btn {
+    position: relative; display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; height: 54px; margin-top: 22px; padding: 0 18px; border: 0; border-radius: 14px; cursor: pointer;
+    font: 700 16px/1 var(--sans); letter-spacing: .01em; color: #fff;
+    background: linear-gradient(180deg, var(--crimson-hi) 0%, var(--crimson) 100%);
+    box-shadow: 0 12px 24px -10px rgba(197, 3, 55, .75), inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 -1px 0 rgba(0, 0, 0, .25);
+    transition: transform .12s ease, filter .15s;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { cursor: wait; filter: saturate(.6) brightness(.9); }
+  .btn.quiet { background: rgba(255, 255, 255, .08); border: 1px solid var(--glass-line); box-shadow: none; font-weight: 600; color: var(--ivory); }
+  .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite; }
+
+  .err { color: var(--err); font-size: 13.5px; margin-top: 12px; }
+  .err:empty { display: none; }
+
+  .who { display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 16px;
+    background: rgba(10, 29, 75, .45); border: 1px solid rgba(204, 158, 74, .5); }
+  .mono { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+    font: 600 19px/1 var(--serif); color: var(--navy); background: linear-gradient(160deg, var(--gold-soft), var(--gold)); }
+  .who .n { font-weight: 700; font-size: 16.5px; line-height: 1.25; }
+  .who .d { color: var(--ink-2); font-size: 13px; line-height: 1.4; }
+  .notme { font-size: 12.5px; color: var(--ink-3); margin: 8px 2px 0; }
+  .notme a { color: var(--gold-soft); }
+  .prev { margin-top: 14px; font-size: 13.5px; padding: 10px 12px; border-radius: 12px; background: rgba(127, 209, 166, .1); border: 1px solid rgba(127, 209, 166, .35); color: var(--ivory); }
+
+  .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice button { position: relative; display: flex; align-items: center; text-align: left; padding: 14px 36px 14px 14px; min-height: 58px; border-radius: 14px; cursor: pointer;
+    font: 600 15px/1.25 var(--sans); color: var(--ivory); background: rgba(255, 255, 255, .06); border: 1px solid rgba(247, 235, 224, .26);
+    transition: border-color .15s, background .15s; }
+  .choice button::after { content: ""; position: absolute; top: 50%; margin-top: -9px; right: 12px; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(247, 235, 224, .4); }
+  .choice button[aria-pressed=true] { border-color: var(--gold); background: rgba(204, 158, 74, .16); }
+  .choice button[aria-pressed=true]::after { border-color: var(--gold); background: var(--gold) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'><path d='M5 9.4l2.6 2.6L13 6.4' fill='none' stroke='%230A1D4B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/14px no-repeat; }
+
+  .agree { display: flex; gap: 11px; align-items: flex-start; margin-top: 18px; font-size: 13.5px; color: var(--ink-2); cursor: pointer; }
+  .agree input { appearance: none; -webkit-appearance: none; flex: none; width: 20px; height: 20px; margin: 1px 0 0; border-radius: 6px; border: 1.5px solid rgba(247, 235, 224, .45); background: rgba(255,255,255,.06); cursor: pointer; }
+  .agree input:checked { border-color: var(--gold); background: var(--gold) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M5.5 10.4l3 3L14.5 7' fill='none' stroke='%230A1D4B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/16px no-repeat; }
+  .agree input:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  .agree b { color: var(--ivory); }
+  .note { font-size: 12.5px; color: var(--ink-3); margin: 16px 0 0; line-height: 1.5; }
+
+  .done { text-align: center; }
+  .seal { width: 84px; height: 84px; margin: 2px auto 14px; display: block; }
+  .seal circle { stroke: var(--gold); stroke-width: 1.5; fill: rgba(204, 158, 74, .12); }
+  .seal path { stroke: var(--gold-soft); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw .6s .25s ease-out forwards; }
+  .summary { margin: 18px 0 0; text-align: left; font-size: 14px; border-top: 1px solid rgba(204, 158, 74, .35); padding-top: 12px; }
+  .summary div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+  .summary span:first-child { color: var(--ink-3); }
+  .summary span:last-child { font-weight: 600; text-align: right; }
+
+  footer { text-align: center; color: var(--ink-3); font-size: 12.5px; margin-top: 22px; }
+
+  :focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes beamIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition: none !important; } .seal path { stroke-dashoffset: 0; } }
+  @media (max-width: 360px) { .details dd { font-size: 13px; } .details div { padding: 2px 6px; } .glass { padding: 22px 16px 20px; } }
+
+  /* ---------- Laptops and desktops: full screen, invitation left, form right ---------- */
+  @media (min-width: 1000px) {
+    body { padding: 0 48px; }
+    .wrap { max-width: 1200px; min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 1.1fr minmax(420px, 460px); gap: clamp(48px, 7vw, 120px); align-items: center; padding: 48px 0; }
+    .intro-col { align-self: center; }
+    .plaque { margin: 0; flex-direction: row; gap: 14px; padding: 12px 18px; }
+    .plaque img { width: 140px; }
+    .plaque span { font-size: 12px; padding-left: 14px; border-left: 1px solid rgba(204, 158, 74, .6); }
+    .invite { text-align: left; margin: 52px 0 0; }
+    .invite .pre { font-size: 22px; margin-bottom: 10px; }
+    .invite h1 { font-size: clamp(54px, 5.4vw, 78px); line-height: .98; max-width: 9.5em; }
+    .invite .sub { font-size: 32px; margin-top: 10px; }
+    .flourish { margin: 30px 0 0; width: 180px; }
+    .details { margin: 28px 0 0; max-width: 520px; grid-template-columns: auto auto auto; justify-content: start; }
+    .details div { padding: 2px 28px; }
+    .details div:first-child { padding-left: 0; }
+    .details dt { font-size: 13px; }
+    .details dd { font-size: 17px; white-space: nowrap; }
+    .details dd br { display: none; }
+    .glass { padding: 34px 32px 30px; }
+    h2 { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="stage" aria-hidden="true">
+  <div class="beam"></div>
+  <div class="curtain l"></div><div class="curtain r"></div>
+  <div class="bokeh a"></div><div class="bokeh b"></div><div class="bokeh c"></div>
+  <div class="grain"></div>
+</div>
+
+<div class="wrap">
+  <div class="intro-col">
+    <div class="plaque">
+      <img src="logo.png" alt="Metropolitan">
+      <span>Metropolitan Technologies (Pvt) Ltd</span>
+    </div>
+
+    <header class="invite">
+      <p class="pre">You are cordially invited to the</p>
+      <h1>Metropolitan Excellence Award</h1>
+      <p class="sub">and Year End Party</p>
+      <svg class="flourish" viewBox="0 0 132 12" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><path d="M0 6h54M78 6h54" stroke="#CC9E4A" stroke-width="1"/><path d="M66 1.5l4.5 4.5-4.5 4.5-4.5-4.5z" fill="#CC9E4A"/></svg>
+      <dl class="details">
+        <div><dt>Date</dt><dd>20th November<br> 2026</dd></div>
+        <div><dt>Time</dt><dd>4.30 P.M.</dd></div>
+        <div><dt>Location</dt><dd>Monarch<br> Imperial</dd></div>
+      </dl>
+    </header>
+  </div>
+
+  <div class="form-col">
+    <!-- Step 1: identify -->
+    <section class="glass" id="s1">
+      <p class="step">Step 1 of 2</p>
+      <h2>Confirm your participation</h2>
+      <p class="hint">Every staff member confirms for themselves. Please respond by <b>28th October 2026</b>.</p>
+      <form id="f1" novalidate>
+        <label class="f" for="emp">Employee number</label>
+        <div class="field">
+          <input id="emp" type="text" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="6 digits, e.g. 000123">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13h3"/></svg>
+        </div>
+        <label class="f" for="nic">Last 4 numbers of your NIC <small>(ignore the letter V)</small></label>
+        <div class="field">
+          <input id="nic" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/><circle cx="12" cy="15.2" r="1.1"/></svg>
+        </div>
+        <button class="btn" id="b1" type="submit">Continue</button>
+        <div class="err" id="e1" role="alert"></div>
+      </form>
+    </section>
+
+    <!-- Step 2: respond -->
+    <section class="glass" id="s2" hidden>
+      <p class="step">Step 2 of 2</p>
+      <div class="who">
+        <div class="mono" id="wInit" aria-hidden="true"></div>
+        <div>
+          <div class="n" id="wName"></div>
+          <div class="d" id="wDesig"></div>
+          <div class="d" id="wDept"></div>
+        </div>
+      </div>
+      <p class="notme">Not you? <a href="#" id="back">Go back</a> and check your employee number.</p>
+      <div class="prev" id="prev" hidden></div>
+
+      <form id="f2" novalidate>
+        <label class="f" id="qLbl">Will you be joining us?</label>
+        <div class="choice" id="status" role="group" aria-labelledby="qLbl">
+          <button type="button" data-v="Attending" aria-pressed="false">Yes, I'll attend</button>
+          <button type="button" data-v="Not attending" aria-pressed="false">No, I can't</button>
+        </div>
+
+        <label class="f" for="wa">WhatsApp number</label>
+        <div class="field">
+          <input id="wa" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" placeholder="10 digits, e.g. 0771234567">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 19.5l1.1-3.6A8 8 0 1 1 8.4 18.6z"/><path d="M9.2 8.6c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.6 1.4c.1.2 0 .5-.1.6l-.5.6c.6 1.1 1.4 1.9 2.5 2.5l.6-.5c.2-.2.4-.2.6-.1l1.4.6c.3.1.4.3.4.5v.5c0 .3 0 .6-.5.8-.6.3-1.6.4-3.1-.4a8.6 8.6 0 0 1-3.3-3.3c-.8-1.5-.7-2.5-.4-3.1z"/></svg>
+        </div>
+        <div class="helper">Event updates will be sent to this number.</div>
+
+        <label class="agree"><input type="checkbox" id="agree"><span>I confirm I am <b id="agreeName"></b> and this response is my own.</span></label>
+
+        <button class="btn" id="b2" type="submit">Submit response</button>
+        <div class="err" id="e2" role="alert"></div>
+        <p class="note">Arrangements are made based on confirmed numbers, so please choose "Yes" only if you will attend. You can change your response until <span id="dl">28th October 2026</span>.</p>
+      </form>
+    </section>
+
+    <!-- Step 3: done -->
+    <section class="glass done" id="s3" hidden>
+      <svg class="seal" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40"/><path d="M28 43.5l9 9 19-20"/></svg>
+      <h2 id="dTitle">Response recorded</h2>
+      <p class="hint" id="dText"></p>
+      <div class="summary" id="dSum"></div>
+      <button class="btn quiet" id="again" type="button">Done</button>
+    </section>
+
+    <!-- Closed -->
+    <section class="glass" id="sClosed" hidden>
+      <h2>Online confirmation has closed</h2>
+      <p class="hint">The last date to confirm was 28th October 2026. If you have not responded, please contact HR (2624 - Dakshila) or your Head of Department.</p>
+    </section>
+
+    <footer>Questions? Contact HR (2624 - Dakshila).</footer>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var cred = null, pick = { status: '' };
+  var wide = function () { return window.innerWidth >= 1000; };
+
+  function show(id) {
+    ['s1', 's2', 's3', 'sClosed'].forEach(function (s) { $(s).hidden = s !== id; });
+    var el = $(id); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    if (!wide()) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 24), behavior: 'smooth' });
+  }
+  function busy(btn, on, label) {
+    btn.disabled = on;
+    btn.innerHTML = on ? '<span class="spin" aria-hidden="true"></span>' + label : label;
+  }
+  function fmtDate(iso) {
+    try {
+      var d = new Date(iso), day = Number(d.toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'Asia/Colombo' }));
+      var suf = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+      return day + suf + ' ' + d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Asia/Colombo' });
+    } catch (e) { return '28th October 2026'; }
+  }
+  function prettyWa(w) { return w && w.indexOf('94') === 0 ? '0' + w.slice(2, 4) + ' ' + w.slice(4, 7) + ' ' + w.slice(7) : (w || ''); }
+  function initials(n) {
+    var p = String(n || '').replace(/[^A-Za-z\s.]/g, ' ').split(/[\s.]+/).filter(Boolean);
+    if (!p.length) return '';
+    return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  }
+  function setStatus(v) {
+    $('e2').textContent = ''; pick.status = v;
+    $('status').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false'); });
+  }
+
+  $('status').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setStatus(b.dataset.v); });
+  $('emp').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
+  $('nic').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
+  $('wa').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+
+  $('f1').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    $('e1').textContent = '';
+    var emp = $('emp').value.trim(), nic = $('nic').value.trim();
+    if (!/^\d{6}$/.test(emp)) { $('e1').textContent = 'Enter your 6-digit employee number, including the zeros at the front (e.g. 000123).'; $('emp').focus(); return; }
+    if (!/^\d{4}$/.test(nic)) { $('e1').textContent = 'Enter the last 4 numbers of your NIC.'; $('nic').focus(); return; }
+    busy($('b1'), true, 'Checking');
+    var r = await window.rsvpCall({ action: 'verify', emp: emp, nic: nic });
+    busy($('b1'), false, 'Continue');
+    if (!r.ok) { $('e1').textContent = r.error || 'Something went wrong. Please try again.'; return; }
+    if (!r.open) { show('sClosed'); return; }
+    cred = { emp: emp, nic: nic };
+    $('wInit').textContent = initials(r.name);
+    $('wName').textContent = r.name;
+    $('wDesig').textContent = r.designation || '';
+    $('wDept').textContent = r.department || '';
+    $('agreeName').textContent = r.name;
+    $('dl').textContent = fmtDate(r.deadline);
+    $('agree').checked = false;
+    setStatus(''); $('wa').value = ''; $('e2').textContent = '';
+    if (r.existing) {
+      $('prev').hidden = false;
+      $('prev').textContent = 'You have already responded: ' + r.existing.status + '. You can change it below if your plans have changed.';
+      setStatus(r.existing.status);
+      $('wa').value = r.existing.whatsapp ? '0' + String(r.existing.whatsapp).slice(2) : '';
+    } else { $('prev').hidden = true; }
+    show('s2');
+  });
+
+  $('back').addEventListener('click', function (e) { e.preventDefault(); cred = null; $('nic').value = ''; show('s1'); $('emp').focus(); });
+
+  $('f2').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var err = $('e2'); err.textContent = '';
+    if (!pick.status) { err.textContent = 'Choose whether you will attend.'; return; }
+    var wa = $('wa').value.replace(/\D/g, '');
+    if (!/^07\d{8}$/.test(wa)) { err.textContent = 'WhatsApp number must be exactly 10 digits and start with 07, e.g. 0771234567.'; $('wa').focus(); return; }
+    if (!$('agree').checked) { err.textContent = 'Tick the box to confirm this response is your own.'; return; }
+    busy($('b2'), true, 'Submitting');
+    var r = await window.rsvpCall({ action: 'submit', emp: cred.emp, nic: cred.nic, status: pick.status, whatsapp: wa });
+    busy($('b2'), false, 'Submit response');
+    if (!r.ok) { err.textContent = r.error || 'Something went wrong. Please try again.'; return; }
+    var going = r.status === 'Attending';
+    $('dTitle').textContent = going ? 'We look forward to seeing you' : 'Thank you for letting us know';
+    $('dText').textContent = (r.changed ? 'Your response has been updated.' : 'Your response has been recorded.') +
+      (going ? ' Join us at Monarch Imperial on 20th November from 4.30 P.M.' : ' You will be missed on the night.');
+    var full = '94' + wa.slice(1);
+    var rows = [['Name', r.name], ['Employee number', cred.emp], ['Response', going ? 'Attending' : 'Not attending'], ['WhatsApp', prettyWa(full)]];
+    $('dSum').innerHTML = '';
+    rows.forEach(function (p) {
+      var d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('span');
+      a.textContent = p[0]; b.textContent = p[1]; d.appendChild(a); d.appendChild(b); $('dSum').appendChild(d);
+    });
+    cred = null;
+    show('s3');
+  });
+
+  $('again').addEventListener('click', function () { $('emp').value = ''; $('nic').value = ''; show('s1'); });
+})();
+</script>
+</body>
+</html>
