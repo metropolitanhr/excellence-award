@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Excellence Award RSVP Admin</title>
+<title>Excellence Awards RSVP Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -103,7 +103,7 @@
 <div class="gate" id="login"><section class="login">
   <span class="plq"><img src="logo.png" alt="Metropolitan"></span>
   <h1>Attendance dashboard</h1>
-  <div class="sub">Metropolitan Excellence Award and Year End Party</div>
+  <div class="sub">Metropolitan Excellence Awards and Year End Party</div>
   <form id="lf">
     <label for="lu">Username</label><input id="lu" autocomplete="username">
     <label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password">
@@ -114,7 +114,7 @@
 
 <div id="app" hidden>
   <div class="top">
-    <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Excellence Award and Year End Party</b>
+    <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Excellence Awards and Year End Party</b>
     <span class="meta" id="meta"></span>
     <span class="sp"></span>
     <button id="xlsx">Download Excel</button>
@@ -365,7 +365,7 @@
   $('copyPending').addEventListener('click', function () {
     var list = filtered().filter(function (r) { return !r.status; });
     if (!list.length) { toast('No pending staff in this view.'); return; }
-    var base = 'Pending confirmations - Excellence Award & Year End Party'; var head = $('fHod').value ? base + ', team of ' + $('fHod').value : $('fDept').value ? base + ', ' + $('fDept').value : base;
+    var base = 'Pending confirmations - Excellence Awards & Year End Party'; var head = $('fHod').value ? base + ', team of ' + $('fHod').value : $('fDept').value ? base + ', ' + $('fDept').value : base;
     var txt = head + ' (' + list.length + '):\n' + list.map(function (r, i) { return (i + 1) + '. ' + r.emp + ' - ' + r.name; }).join('\n') +
       '\n\nPlease confirm at ' + location.href.replace(/admin\.html.*$/, '') + ' before the deadline.';
     copy(txt);
