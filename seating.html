@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Seating Plan · Excellence Awards Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#EEF0F5;--card:#fff;--ink:#171721;--mute:#5A6077;--line:#E0E3EC;--acc:#0A1D4B;--gold:#CC9E4A;--warn:#c62828;--ok:#1F7A50}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.top{background:linear-gradient(90deg,#0A1D4B,#14265C 60%,#3A0F2A);color:#F7EBE0;padding:10px 16px;border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top b{font-size:15px}
+.top .meta{color:#a7adc4;font-size:12px}
+.top a,.top button{background:transparent;color:#f3f1ea;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit;text-decoration:none}
+.grow{flex:1}
+.search{position:relative}
+.search input{width:250px;padding:7px 10px;border:1px solid rgba(255,255,255,.35);border-radius:8px;font:inherit;background:rgba(255,255,255,.1);color:#fff}
+.search input::placeholder{color:#c9cde0}
+.results{position:absolute;top:36px;left:0;width:340px;max-height:360px;overflow:auto;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:30;display:none}
+.results div{padding:7px 10px;cursor:pointer;border-bottom:1px solid #f0efeb}
+.results div:hover{background:#f3f6ff}
+.results small{color:var(--mute)}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--ink)}
+button:hover{background:#f3f3f1}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:12px;color:#c9cde0;min-width:110px;text-align:right}
+.status.busy{color:#ffd58a}.status.bad{color:#ff9a9a;font-weight:600}
+main{flex:1;display:flex;min-height:0}
+.mapwrap{flex:1;display:flex;flex-direction:column;min-width:0;padding:12px;gap:10px;overflow:auto}
+.mapcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px}
+svg{display:block;width:100%;height:auto;max-height:calc(100vh - 200px);user-select:none}
+.tbl{cursor:grab;touch-action:none}
+.tbl:active{cursor:grabbing}
+.tbl text.num{font-size:10.5px;font-weight:700;fill:#222;pointer-events:none;text-anchor:middle;dominant-baseline:central}
+.tbl .ring{fill:none;stroke:transparent;stroke-width:2.5}
+.tbl.sel .ring{stroke:#111}
+.tbl.over .ring{stroke:var(--warn);stroke-dasharray:3 2}
+.tbl.hit .ring{stroke:#ff9800;stroke-width:3.5}
+.tbl.drop .ring{stroke:var(--gold);stroke-width:3.5;stroke-dasharray:4 2}
+.tbl.dim{opacity:.18}
+.tbl .cnt{font-size:6px;fill:#555;text-anchor:middle;pointer-events:none}
+.tbl .cnt.free{fill:var(--ok);font-weight:700}
+.tbl .cnt.bad{fill:var(--warn);font-weight:700}
+.legend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lg{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:12px}
+.lg:hover{background:#f1f1ee}
+.lg.on{background:#e8eeff;outline:1px solid #b9c8f5}
+.lg .c{color:var(--mute)}
+.sw{width:12px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.12)}
+aside{width:390px;flex:none;background:var(--card);border-left:1px solid var(--line);overflow:auto;padding:14px}
+aside h2{font-size:15px;margin:0 0 2px}
+aside h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:16px 0 6px;display:flex;align-items:center;gap:8px}
+aside h3 button{margin-left:auto;text-transform:none;letter-spacing:0;font-size:12px;padding:4px 10px}
+.muted{color:var(--mute)}
+.grp{display:flex;align-items:center;gap:6px;margin:12px 0 6px;padding:6px 8px;background:#f4f5f9;border-radius:8px;font-weight:600;font-size:12px;touch-action:none;cursor:grab;flex-wrap:wrap}
+.grp .h{margin-left:auto;color:var(--mute);font-weight:500;font-size:11px}
+.person{border:1px solid var(--line);border-left:4px solid #ccc;border-radius:8px;padding:7px 9px;margin-bottom:6px;background:#fff;touch-action:none;cursor:grab}
+.person.flash{box-shadow:0 0 0 3px #ffb74d}
+.pname{font-weight:600}
+.pdes{font-size:12px;margin-top:1px}
+.pmeta{font-size:11.5px;color:var(--mute);margin-top:2px}
+.note{font-size:11px;color:#8a5a00;margin-top:2px}
+.prow{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.pact{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.pick{display:flex;gap:8px;align-items:flex-start}
+.pick input{width:16px;height:16px;margin:2px 0 0;flex:none;cursor:pointer}
+.person.picked{background:#fff8e6;border-color:#e5c27a}
+.selbar{position:sticky;top:-14px;z-index:5;margin:-14px -14px 10px;padding:10px 14px;background:#0A1D4B;color:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.selbar select{font:inherit;font-size:12px;padding:4px 6px;border-radius:6px;border:0;max-width:170px}
+.selbar button{font-size:12px;padding:4px 10px}
+.grp input{width:15px;height:15px;margin:0;cursor:pointer}
+select.mv{font:inherit;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:#fafafa;max-width:130px;cursor:pointer}
+button.auto{font-size:11px;padding:2px 8px}
+.tray{border:2px dashed #d7d4cc;border-radius:10px;padding:8px;background:#fcfbf8;min-height:48px}
+.tray.drop{border-color:var(--gold);background:#fff8ea}
+.tray .empty{color:var(--mute);font-size:12px;text-align:center;padding:8px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#f4f5f9;border-radius:8px;padding:8px 10px}
+.stat b{font-size:18px;display:block}
+.blocks{width:100%;border-collapse:collapse;font-size:12px}
+.blocks td{padding:5px 0;border-top:1px solid var(--line);vertical-align:top}
+.blocks td.r{text-align:right;white-space:nowrap;padding-left:8px}
+.blocks .full{color:var(--warn);font-weight:600}
+.tips{font-size:12.5px;line-height:1.55;color:#333;padding-left:18px;margin:6px 0}
+.ghost{position:fixed;pointer-events:none;z-index:100;background:#171721;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(12px,12px);white-space:nowrap}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#0A1D4B;color:#fff;padding:9px 14px;border-radius:9px;font-size:12.5px;z-index:120;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}.toast.warn{background:var(--warn)}
+.close{float:right;border:none;background:none;font-size:18px;padding:0 4px;color:var(--mute)}
+.gate{flex:1;display:grid;place-items:center;padding:24px;text-align:center}
+.gate .box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;max-width:380px}
+.gate a{color:var(--acc);font-weight:700}
+[hidden]{display:none!important}
+@media (max-width:900px){main{flex-direction:column}aside{width:auto;border-left:none;border-top:1px solid var(--line)}.search input{width:170px}svg{max-height:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Seating plan</b>
+  <span class="meta" id="meta">Loading…</span>
+  <span class="grow"></span>
+  <div class="search"><input id="q" placeholder="Find a person, emp no or department…" autocomplete="off"><div class="results" id="results"></div></div>
+  <button id="undo" disabled title="Undo the last move (Ctrl+Z)">↶ Undo</button>
+  <button id="reload">Refresh</button>
+  <button id="export">Download Excel</button>
+  <a href="admin.html">Attendance dashboard</a>
+  <span class="status" id="status"></span>
+</div>
+<div class="gate" id="gate" hidden><div class="box"><p id="gateMsg">Please log in to the attendance dashboard first.</p><p><a href="admin.html">Go to the dashboard</a></p></div></div>
+<main id="app" hidden>
+  <div class="mapwrap">
+    <div class="mapcard"><svg id="map" viewBox="40 8 640 492"></svg></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <aside id="panel"></aside>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let TOKEN = null; try{ TOKEN = sessionStorage.getItem('mn_tok'); }catch(e){}
+let CAP = 10, TCOUNT = 66, GROUPS = [], GBY = {}, SPARE = [66];
+let P = [];                 // people: {id,e,n,d,dp,h,g,t,st,arr}
+let S = { tables:{}, un:[] };
+let sel=null, filter=null, hits=new Set(), flashPid=null, history=[], pending=0, loadedAt=null;
+let picked=new Set();   // people ticked for "move selected"
+const ownOf = p => p.og || p.g || 'No group';
+
+// ---------- table positions (fixed, from the venue floor plan; numbered along the table-draw zigzag) ----------
+const POS = {};
+const X = [241,287,334,374,419,464,508];
+const YT = [47,94,132,173,212], YB = [293,333,373,411,457];
+const COLS = [
+  [[66,53,52,39,38],[25,24,12,11,1]],
+  [[65,54,51,40,37],[26,23,13,10,2]],
+  [[64,55,50,41,36],[27,22,14,9,3]],
+  [[63,56,49,42,35],[28,21,15,8,4]],
+  [[62,57,48,43,34],[29,20,16,7,5]],
+  [[61,58,47,44,33],[30,19,17,6]],
+  [[60,59,46,45,32],[31,18]]
+];
+COLS.forEach((c,i)=>{c[0].forEach((t,j)=>POS[t]=[X[i],YT[j]]);c[1].forEach((t,j)=>POS[t]=[X[i],YB[j]]);});
+const TABLES = Object.keys(POS).map(Number).sort((a,b)=>a-b);
+const color = g => (GBY[g]&&GBY[g].color) || '#9aa0b0';
+
+// ---------- loading ----------
+async function load(quiet){
+  if(!TOKEN){ showGate('Please log in to the attendance dashboard first.'); return; }
+  if(!quiet) setStatus('Loading…','busy');
+  const r = await window.rsvpCall({action:'seating', token:TOKEN});
+  if(!r.ok){
+    if(r.auth===false){ try{sessionStorage.removeItem('mn_tok');}catch(e){} showGate(r.error); return; }
+    setStatus('Could not load','bad'); toast(r.error,true); return;
+  }
+  CAP=r.seats||10; TCOUNT=r.tables||66; GROUPS=r.groups||[]; SPARE=r.spare||[66];
+  GBY={}; GROUPS.forEach(g=>GBY[g.name]=g);
+  P = r.people.map((a,i)=>{ const o={id:i}; r.cols.forEach((c,j)=>o[c]=a[j]); return o; });
+  S = { tables:{}, un:[] };
+  TABLES.forEach(t=>S.tables[t]=[]);
+  P.forEach(p=>{ if(p.t && S.tables[p.t]) S.tables[p.t].push(p.id); else if(p.st==='Attending') S.un.push(p.id); });
+  history=[]; picked=new Set(); loadedAt=new Date();
+  $('meta').textContent = 'Signed in as '+r.admin+' · '+P.filter(p=>p.st==='Attending').length+' attending';
+  $('gate').hidden=true; $('app').hidden=false;
+  if(!svgBuilt) buildMap();
+  renderAll(); setStatus('Up to date '+clock(loadedAt));
+}
+function showGate(msg){ $('gateMsg').textContent=msg||'Please log in.'; $('gate').hidden=false; $('app').hidden=true; $('meta').textContent=''; }
+function clock(d){ return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function setStatus(t,cls){ const s=$('status'); s.textContent=t; s.className='status'+(cls?' '+cls:''); $('undo').disabled=!history.length||pending>0; }
+
+// ---------- saving: every change goes to the RSVP Sheet straight away ----------
+async function persist(moves, okMsg, before){
+  pending++; setStatus('Saving…','busy');
+  const r = await window.rsvpCall({action:'seat', token:TOKEN, moves:moves.map(m=>({emp:P[m.pid].e, table:m.to||''}))}, 2);
+  pending--;
+  if(!r.ok){
+    if(before){ restore(before); }
+    if(r.auth===false){ showGate(r.error); return false; }
+    toast('Not saved: '+r.error,true); setStatus('Last change not saved','bad'); return false;
+  }
+  moves.forEach(m=>{ P[m.pid].t=m.to||''; const blk=m.to?ownerOf(m.to):null; if(blk) P[m.pid].g=blk.name; });
+  if(!pending) setStatus('Saved '+clock(new Date()));
+  if(okMsg) toast(okMsg);
+  return true;
+}
+function snapshot(){ return JSON.stringify({tables:S.tables,un:S.un,t:P.map(p=>p.t)}); }
+function restore(snap){ const s=JSON.parse(snap); S.tables=s.tables; S.un=s.un; s.t.forEach((t,i)=>P[i].t=t); renderAll(); }
+function whereIs(pid){ for(const t in S.tables) if(S.tables[t].includes(pid)) return t; return S.un.includes(pid)?'U':null; }
+
+// Moves people and saves. dest: table number or 'U' (not seated).
+async function doMove(ids, dest, msg){
+  ids = ids.filter(pid=>whereIs(pid)!==String(dest));
+  if(!ids.length) return;
+  const before = snapshot();
+  const moves = ids.map(pid=>({pid, from:whereIs(pid), to: dest==='U'?'':String(dest)}));
+  removeIds(ids);
+  if(dest==='U') S.un.push(...ids); else S.tables[dest].push(...ids);
+  ids.forEach(pid=>picked.delete(pid));
+  history.push(moves); if(history.length>100) history.shift();
+  renderAll();
+  const n = dest==='U'?0:S.tables[dest].length;
+  await persist(moves, n>CAP ? null : msg, before);
+  if(n>CAP) toast(`Table ${dest} now has ${n} people, over the ${CAP}-seat limit`,true);
+}
+async function doSwap(a,b){
+  if(a===b) return;
+  if(b==='U'){ await doMove(S.tables[a].slice(),'U',`Table ${a} cleared to Not yet seated`); return; }
+  const before = snapshot();
+  const A=S.tables[a].slice(), B=S.tables[b].slice();
+  const moves = A.map(pid=>({pid,from:a,to:b})).concat(B.map(pid=>({pid,from:b,to:a})));
+  if(!moves.length) return;
+  S.tables[a]=B; S.tables[b]=A;
+  if(sel===a) sel=b; else if(sel===b) sel=a;
+  history.push(moves); renderAll();
+  await persist(moves, `Swapped table ${a} and table ${b}`, before);
+}
+async function undo(){
+  if(!history.length || pending) return;
+  const last = history.pop(), before = snapshot();
+  const moves = last.map(m=>({pid:m.pid, from:m.to||'U', to:m.from==='U'?'':m.from}));
+  moves.forEach(m=>{ removeIds([m.pid]); if(m.to) S.tables[m.to].push(m.pid); else S.un.push(m.pid); });
+  renderAll();
+  await persist(moves,'Undone',before);
+}
+function removeIds(ids){ const set=new Set(ids); for(const t in S.tables) S.tables[t]=S.tables[t].filter(x=>!set.has(x)); S.un=S.un.filter(x=>!set.has(x)); }
+
+// Free seat for a person: their group's own tables first, then the spare table, then any table with room.
+function freeTableFor(pid, extra){
+  const g=GBY[ownOf(P[pid])]||GBY[P[pid].g], order=(g?g.tables:[]).concat(SPARE), fixed=[].concat(...GROUPS.filter(x=>x.locked).map(x=>x.tables));
+  TABLES.forEach(t=>{ if(!order.includes(t) && !fixed.includes(t)) order.push(t); });
+  fixed.forEach(t=>{ if(!order.includes(t)) order.push(t); });   // HR and Directors tables only as a last resort
+  for(const t of order){ if(S.tables[t] && S.tables[t].length+((extra||{})[t]||0)<CAP) return String(t); }
+  return null;
+}
+async function autoSeat(ids){
+  const plan={}, extra={}, moves=[];
+  ids.forEach(pid=>{ const t=freeTableFor(pid,extra); if(t){ extra[t]=(extra[t]||0)+1; (plan[t]=plan[t]||[]).push(pid); } });
+  const placed=Object.values(plan).reduce((a,b)=>a+b.length,0);
+  if(!placed){ toast('No free seats left at any table.',true); return; }
+  const before=snapshot();
+  Object.keys(plan).forEach(t=>plan[t].forEach(pid=>{ moves.push({pid,from:whereIs(pid),to:t}); removeIds([pid]); S.tables[t].push(pid); }));
+  history.push(moves); renderAll();
+  const left=ids.length-placed;
+  await persist(moves, placed===1?`${P[moves[0].pid].n} seated at table ${moves[0].to}`:`${placed} people seated`+(left?`, ${left} still need a table`:''), before);
+}
+
+// ---------- map ----------
+const svg=$('map'); let svgBuilt=false;
+function buildMap(){
+  let h='';
+  h+=`<rect x="48" y="22" width="560" height="472" rx="6" fill="#fbfaf7" stroke="#bdb9b0" stroke-width="1.5"/>`;
+  h+=`<text x="328" y="16" text-anchor="middle" font-size="10" fill="#888">145 ft</text>`;
+  h+=`<rect x="62" y="93" width="22" height="327" fill="#222"/><text transform="translate(76 256) rotate(-90)" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">LED</text>`;
+  h+=`<rect x="85" y="93" width="62" height="327" fill="#5b8fd6"/><text transform="translate(119 256) rotate(-90)" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">STAGE</text>`;
+  h+=`<rect x="157" y="93" width="62" height="327" fill="#8b6bb0"/><text transform="translate(191 256) rotate(-90)" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">DANCE FLOOR</text>`;
+  h+=`<rect x="547" y="45" width="26" height="115" fill="#5b8fd6"/><text transform="translate(563 102) rotate(90)" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">CTRL PANEL</text>`;
+  h+=`<rect x="547" y="355" width="26" height="60" fill="#5b8fd6"/><text transform="translate(563 385) rotate(90)" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">BAR</text>`;
+  h+=`<rect x="447" y="466" width="62" height="24" fill="#5b8fd6"/><text x="478" y="481" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">BAR</text>`;
+  [190,300].forEach(y=>{ h+=`<path d="M665 ${y} L622 ${y} M630 ${y-6} L620 ${y} L630 ${y+6}" stroke="#5b8fd6" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; });
+  h+=`<rect x="614" y="168" width="54" height="13" fill="#5b8fd6"/><text x="641" y="177.5" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">REG. TABLE</text>`;
+  h+=`<rect x="614" y="318" width="54" height="13" fill="#5b8fd6"/><text x="641" y="327.5" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">REG. TABLE</text>`;
+  TABLES.forEach(t=>{ const [x,y]=POS[t];
+    h+=`<g class="tbl" data-t="${t}" data-drop="${t}" transform="translate(${x} ${y})"><title></title><g class="segs"></g><circle r="12.5" fill="#fff"/><text class="num" y="-2.8">${t}</text><text class="cnt" y="7"></text><circle class="ring" r="21"/></g>`; });
+  svg.innerHTML=h; svgBuilt=true;
+  svg.querySelectorAll('.tbl').forEach(g=>g.addEventListener('pointerdown',e=>{ const t=g.dataset.t; startDrag(e,{kind:'table',src:t},()=>`Table ${t} (${S.tables[t].length} people) → drop on another table to swap`); }));
+}
+function arcPath(R,r,a0,a1){
+  const p=(rad,a)=>[rad*Math.sin(a),-rad*Math.cos(a)], large=(a1-a0)>Math.PI?1:0;
+  const [x0,y0]=p(R,a0),[x1,y1]=p(R,a1),[x2,y2]=p(r,a1),[x3,y3]=p(r,a0);
+  return `M${x0} ${y0}A${R} ${R} 0 ${large} 1 ${x1} ${y1}L${x2} ${y2}A${r} ${r} 0 ${large} 0 ${x3} ${y3}Z`;
+}
+function tableGroups(t){ const m=new Map(); S.tables[t].forEach(pid=>{const g=ownOf(P[pid]);m.set(g,(m.get(g)||0)+1);}); return [...m.entries()].sort((a,b)=>b[1]-a[1]); }
+function ownerOf(t){ return GROUPS.find(g=>g.tables.includes(+t)); }
+function renderMap(){
+  svg.querySelectorAll('.tbl').forEach(g=>{
+    const t=g.dataset.t, ids=S.tables[t], n=ids.length, grps=tableGroups(t), R=19.5, r=12.5, own=ownerOf(t);
+    let segs='';
+    if(n===0) segs=`<circle r="${R}" fill="#efeee9" stroke="${own?color(own.name):'#aaa'}" stroke-dasharray="3 2"/>`;
+    else if(grps.length===1) segs=`<circle r="${(R+r)/2}" fill="none" stroke="${color(grps[0][0])}" stroke-width="${R-r}"/>`;
+    else{ let a=0; grps.forEach(([k,c])=>{const a1=a+c/n*Math.PI*2;segs+=`<path d="${arcPath(R,r,a,a1)}" fill="${color(k)}" stroke="#fff" stroke-width=".6"/>`;a=a1;}); }
+    g.querySelector('.segs').innerHTML=segs;
+    const cnt=g.querySelector('.cnt'); cnt.textContent=n+'/'+CAP;
+    cnt.setAttribute('class','cnt'+(n>CAP?' bad':n<CAP?' free':''));
+    g.querySelector('title').textContent=`Table ${t}${own?' · '+own.name:''} · ${n} of ${CAP} seats\n`+grps.map(([k,c])=>`${k} (${c})`).join('\n');
+    g.classList.toggle('sel',sel===t); g.classList.toggle('over',n>CAP); g.classList.toggle('hit',hits.has(t));
+    g.classList.toggle('dim', !!filter && !ids.some(pid=>ownOf(P[pid])===filter) && !(own && own.name===filter));
+  });
+}
+
+// ---------- legend ----------
+function renderLegend(){
+  const count={}; P.forEach(p=>{ if(p.st==='Attending'||p.t){ const g=ownOf(p); count[g]=(count[g]||0)+1; } });
+  const names=GROUPS.map(g=>g.name).concat(Object.keys(count).filter(k=>!GBY[k]));
+  $('legend').innerHTML=`<div style="width:100%;font-size:11.5px" class="muted">Each person is coloured by their own SBU or department group, so a table with several colours mixes groups. A dashed circle is an empty table in the colour of the group it belongs to. Click a group to highlight its tables, click again to clear.</div>`+
+    names.map(n=>`<div class="lg ${filter===n?'on':''}" data-g="${esc(n)}"><span class="sw" style="background:${color(n)}"></span>${esc(n)} <span class="c">· ${count[n]||0}</span></div>`).join('');
+  $('legend').querySelectorAll('[data-g]').forEach(el=>el.onclick=()=>{ filter=filter===el.dataset.g?null:el.dataset.g; renderAll(); });
+}
+
+// ---------- side panel ----------
+function moveOptions(cur){
+  let o=`<option value="">Move to…</option>`;
+  TABLES.forEach(t=>{ if(String(t)!==String(cur)){ const n=S.tables[t].length; o+=`<option value="${t}">Table ${t} (${n}/${CAP})${n<CAP?' · '+(CAP-n)+' free':''}</option>`; } });
+  if(cur!=='U') o+=`<option value="U">Not yet seated</option>`;
+  return o;
+}
+function personCard(pid,cur){
+  const p=P[pid], blk=cur!=='U'?ownerOf(cur):null, away = blk && ownOf(p)!==blk.name;
+  return `<div class="person ${flashPid===pid?'flash':''} ${picked.has(pid)?'picked':''}" data-pid="${pid}" style="border-left-color:${color(ownOf(p))}">
+    <div class="prow"><label class="pick"><input type="checkbox" data-pick="${pid}" ${picked.has(pid)?'checked':''} aria-label="Select ${esc(p.n)}"><div><div class="pname">${esc(p.n)}</div><div class="pdes">${esc(p.d)}</div></div></label>
+    <div class="pact"><select class="mv" data-pid="${pid}">${moveOptions(cur)}</select>${cur==='U'?`<button class="auto" data-auto="${pid}" type="button">Seat with ${esc(ownOf(p))}</button>`:''}</div></div>
+    <div class="pmeta">Emp ${esc(p.e)} · ${esc(p.dp)} · ${esc(ownOf(p))}</div>
+    ${p.h&&p.h!=='Not assigned'?`<div class="pmeta">Reports to: ${esc(p.h)}</div>`:''}
+    ${p.st!=='Attending'?`<div class="note">Not attending any more. Move them to Not yet seated to free the seat.</div>`:''}
+    ${p.arr?`<div class="note" style="color:var(--ok)">Arrived (checked in)</div>`:''}
+    ${away?`<div class="note">${esc(ownOf(p))} person at a ${esc(blk.name)} table</div>`:''}
+  </div>`;
+}
+function groupBlock(ids,cur){
+  const m=new Map();
+  ids.forEach(pid=>{const k=ownOf(P[pid])+'|'+(P[pid].dp||'No department'); if(!m.has(k))m.set(k,[]); m.get(k).push(pid);});
+  let h='';
+  [...m.entries()].sort((a,b)=>b[1].length-a[1].length).forEach(([k,list])=>{
+    const [g,d]=k.split('|');
+    const all=list.every(pid=>picked.has(pid));
+    h+=`<div class="grp" data-gk="${esc(k)}" data-cur="${cur}" title="Drag this bar onto a table to move the whole department"><input type="checkbox" data-pickall="${esc(list.join(','))}" ${all?'checked':''} aria-label="Select all of ${esc(d)}"><span class="sw" style="background:${color(g)}"></span>${esc(d)} (${list.length})<span class="muted" style="font-weight:400;font-size:11px">${esc(g)}</span><span class="h">⠿ drag group</span></div>`;
+    list.forEach(pid=>h+=personCard(pid,cur));
+  });
+  return h;
+}
+function renderPanel(){
+  const pn=$('panel'); let h='';
+  [...picked].forEach(pid=>{ if(!P[pid]) picked.delete(pid); });
+  if(picked.size){
+    const where=new Set([...picked].map(whereIs));
+    h+=`<div class="selbar"><b>${picked.size} selected</b><select id="selMove">${moveOptions(where.size===1?[...where][0]:null)}</select><button id="selClear" type="button">Clear</button><span style="font-size:11px;opacity:.8;width:100%">Pick a table, or drag any ticked person onto the map. You can tick people at several tables: open another table and keep ticking.</span></div>`;
+  }
+  if(sel){
+    const ids=S.tables[sel], n=ids.length, own=ownerOf(sel);
+    h+=`<button class="close" id="closeSel" title="Close">×</button><h2>Table ${sel}</h2>`;
+    h+=`<div class="muted">${own?esc(own.name)+"'s table · ":''}<span style="${n>CAP?'color:var(--warn);font-weight:600':''}">${n} of ${CAP} seats filled${n>CAP?', over capacity':n<CAP?` · ${CAP-n} free`:''}</span></div>`;
+    h+= n? groupBlock(ids,sel) : `<p class="muted">No one is seated here yet. Drag a person or department onto it, or use "Move to…".</p>`;
+  }else{
+    const att=P.filter(p=>p.st==='Attending').length, seated=TABLES.reduce((a,t)=>a+S.tables[t].length,0);
+    const empty=TABLES.filter(t=>!S.tables[t].length), over=TABLES.filter(t=>S.tables[t].length>CAP);
+    const gone=P.filter(p=>p.t&&p.st!=='Attending').length;
+    h+=`<h2>Overview</h2><div class="muted">Attendance comes from the dashboard. Click any table to see who sits there.</div>`;
+    h+=`<div class="stats" style="margin-top:10px">
+      <div class="stat"><b>${att}</b>Attending</div>
+      <div class="stat"><b>${seated}</b>Seated at tables</div>
+      <div class="stat"><b style="${S.un.length?'color:#b26a00':''}">${S.un.length}</b>Not yet seated</div>
+      <div class="stat"><b>${TABLES.length*CAP-seated}</b>Free seats</div>
+      <div class="stat"><b>${empty.length}</b>Empty tables${empty.length?': '+empty.join(', '):''}</div>
+      <div class="stat"><b style="${over.length||gone?'color:var(--warn)':''}">${over.length}</b>Over 10 seats${over.length?': '+over.join(', '):''}</div>
+    </div>`;
+    const mixed=TABLES.filter(t=>tableGroups(t).length>1);
+    if(mixed.length) h+=`<div class="stat" style="margin-top:8px"><b>${mixed.length}</b>Mixed tables (several colours): ${mixed.map(t=>`<a href="#" data-open="${t}" style="color:var(--acc);font-weight:600">${t}</a>`).join(', ')}</div>`;
+    if(gone) h+=`<p class="note" style="font-size:12px">${gone} ${gone===1?'person holds':'people hold'} a seat but ${gone===1?'is':'are'} no longer attending. Search for them or open their table to free the seat.</p>`;
+    h+=`<h3>Groups and their tables</h3><table class="blocks">`+GROUPS.map(g=>{
+      const cap=g.tables.length*CAP, used=g.tables.reduce((a,t)=>a+(S.tables[t]||[]).length,0), free=cap-used;
+      return `<tr><td><span class="sw" style="display:inline-block;vertical-align:-2px;margin-right:6px;background:${g.color}"></span>${g.no?g.no+'. ':''}${esc(g.name)}${g.locked?' <span class="muted">(fixed)</span>':''}<div class="muted">${runs(g.tables)}</div></td><td class="r ${free<0?'full':''}">${free>0?free+' free':free===0?'full':(-free)+' over'}</td></tr>`;
+    }).join('')+`<tr><td>Spare<div class="muted">${runs(SPARE)}</div></td><td class="r">${SPARE.reduce((a,t)=>a+CAP-(S.tables[t]||[]).length,0)} free</td></tr></table>`;
+    h+=`<h3>How it works</h3><ul class="tips">
+      <li>Mark people Attending or Not attending, or add new staff, on the <b>attendance dashboard</b>. This page follows it.</li>
+      <li>When someone stops attending, their seat is freed. New attending staff appear under <b>Not yet seated</b>.</li>
+      <li><b>Drag</b> a person, a department bar or a whole table to move them, or use "Move to…". To move several people, <b>tick</b> them (at one table or several) and choose a table in the dark bar. Every change is saved at once and shows on e-passes and at check-in.</li>
+      <li>A table with <b>several colours</b> mixes people from different groups. Open it to see who is from where.</li>
+      <li>↶ Undo reverses your last move.</li>
+    </ul>`;
+  }
+  h+=`<h3>Not yet seated (${S.un.length})${S.un.length?'<button id="autoAll" type="button">Seat all with their groups</button>':''}</h3><div class="tray" data-drop="U">${S.un.length?groupBlock(S.un,'U'):'<div class="empty">Everyone attending has a table. Drop people here to unseat them.</div>'}</div>`;
+  pn.innerHTML=h;
+  const c=$('closeSel'); if(c) c.onclick=()=>{sel=null;renderAll();};
+  pn.querySelectorAll('[data-open]').forEach(x=>x.onclick=e=>{ e.preventDefault(); sel=x.dataset.open; renderAll(); });
+  const aa=$('autoAll'); if(aa) aa.onclick=()=>autoSeat(S.un.slice());
+  pn.querySelectorAll('[data-auto]').forEach(b=>{ b.addEventListener('pointerdown',e=>e.stopPropagation()); b.onclick=()=>autoSeat([+b.dataset.auto]); });
+  pn.querySelectorAll('select.mv').forEach(s=>{
+    s.addEventListener('pointerdown',e=>e.stopPropagation());
+    s.onchange=()=>{ if(s.value){ const pid=+s.dataset.pid; doMove([pid],s.value,`${P[pid].n} moved to ${s.value==='U'?'Not yet seated':'table '+s.value}`);} };
+  });
+  pn.querySelectorAll('.person').forEach(el=>el.addEventListener('pointerdown',e=>{
+    if(e.target.closest('select,button,input'))return;
+    const pid=+el.dataset.pid, many=picked.has(pid)&&picked.size>1, ids=many?[...picked]:[pid];
+    startDrag(e,{kind:'ids',ids,src:many?null:whereIs(pid)},()=>many?ids.length+' selected people':P[pid].n);
+  }));
+  pn.querySelectorAll('[data-pick]').forEach(cb=>{ cb.addEventListener('pointerdown',e=>e.stopPropagation()); cb.onchange=()=>{ const pid=+cb.dataset.pick; if(cb.checked) picked.add(pid); else picked.delete(pid); renderPanel(); }; });
+  pn.querySelectorAll('[data-pickall]').forEach(cb=>{ cb.addEventListener('pointerdown',e=>e.stopPropagation()); cb.onchange=()=>{ cb.dataset.pickall.split(',').map(Number).forEach(pid=>cb.checked?picked.add(pid):picked.delete(pid)); renderPanel(); }; });
+  const sm=$('selMove'); if(sm) sm.onchange=()=>{ if(!sm.value) return; const ids=[...picked]; doMove(ids,sm.value,`${ids.length} ${ids.length===1?'person':'people'} moved to ${sm.value==='U'?'Not yet seated':'table '+sm.value}`); };
+  const sc=$('selClear'); if(sc) sc.onclick=()=>{ picked=new Set(); renderPanel(); };
+  pn.querySelectorAll('.grp').forEach(el=>el.addEventListener('pointerdown',e=>{
+    if(e.target.closest('input')) return;
+    const k=el.dataset.gk, cur=el.dataset.cur, list=(cur==='U'?S.un:S.tables[cur]).filter(pid=>ownOf(P[pid])+'|'+(P[pid].dp||'No department')===k);
+    startDrag(e,{kind:'ids',ids:list,src:cur},()=>`${k.split('|')[1]} (${list.length} people)`);
+  }));
+  if(flashPid!=null){ const el=pn.querySelector(`.person[data-pid="${flashPid}"]`); if(el) el.scrollIntoView({block:'center'}); flashPid=null; }
+}
+function runs(ts){
+  if(!ts||!ts.length) return '';
+  const out=[]; let a=ts[0], b=ts[0];
+  for(let i=1;i<=ts.length;i++){ if(ts[i]===b+1){b=ts[i];continue;} out.push(a===b?String(a):(b===a+1?a+', '+b:a+' to '+b)); a=b=ts[i]; }
+  return (ts.length===1?'Table ':'Tables ')+out.join(', ');
+}
+
+// ---------- drag (works with mouse and touch) ----------
+let drag=null, ghost=null, overEl=null;
+function startDrag(e,payload,labelFn){
+  if(e.button!==undefined && e.button!==0) return;
+  if(pending){ toast('Saving the last change, one moment…'); return; }
+  drag={...payload,labelFn,x0:e.clientX,y0:e.clientY,started:false};
+  window.addEventListener('pointermove',onMove); window.addEventListener('pointerup',onUp); window.addEventListener('pointercancel',endDrag);
+}
+function dropTarget(x,y){ const el=document.elementFromPoint(x,y); return el?el.closest('[data-drop]'):null; }
+function onMove(e){
+  if(!drag) return;
+  if(!drag.started){ if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<6) return; drag.started=true; ghost=document.createElement('div'); ghost.className='ghost'; ghost.textContent=drag.labelFn(); document.body.appendChild(ghost); }
+  e.preventDefault(); ghost.style.left=e.clientX+'px'; ghost.style.top=e.clientY+'px';
+  const t=dropTarget(e.clientX,e.clientY);
+  if(t!==overEl){ if(overEl) overEl.classList.remove('drop'); overEl=t; if(t&&t.dataset.drop!==drag.src) t.classList.add('drop'); }
+}
+function onUp(e){
+  const d=drag, t=d&&d.started?dropTarget(e.clientX,e.clientY):null; endDrag();
+  if(!d) return;
+  if(!d.started){ if(d.kind==='table'){ sel=sel===d.src?null:d.src; renderAll(); } return; }
+  if(!t) return; const dest=t.dataset.drop; if(dest===d.src) return;
+  if(d.kind==='table') doSwap(d.src,dest);
+  else doMove(d.ids,dest,`${d.ids.length===1?P[d.ids[0]].n:d.ids.length+' people'} moved to ${dest==='U'?'Not yet seated':'table '+dest}`);
+}
+function endDrag(){ window.removeEventListener('pointermove',onMove); window.removeEventListener('pointerup',onUp); window.removeEventListener('pointercancel',endDrag); if(ghost) ghost.remove(); ghost=null; if(overEl) overEl.classList.remove('drop'); overEl=null; drag=null; }
+
+// ---------- search ----------
+const q=$('q'), res=$('results');
+q.addEventListener('input',()=>{
+  const v=q.value.trim().toLowerCase(); hits=new Set();
+  if(v.length<2){ res.style.display='none'; renderMap(); return; }
+  const found=P.filter(p=>(p.n+' '+p.e+' '+p.d+' '+p.dp+' '+ownOf(p)).toLowerCase().includes(v)).slice(0,40);
+  found.forEach(p=>{const w=whereIs(p.id); if(w&&w!=='U') hits.add(w);});
+  res.innerHTML=found.length?found.map(p=>{const w=whereIs(p.id); return `<div data-pid="${p.id}"><b>${esc(p.n)}</b> · ${w==='U'||!w?'<span style="color:#b26a00">not seated</span>':'Table '+w}${p.st!=='Attending'?' · <span style="color:var(--warn)">not attending</span>':''}<br><small>${esc(p.e)} · ${esc(p.d)} · ${esc(p.dp)} · ${esc(ownOf(p))}</small></div>`;}).join(''):'<div class="muted">No match among attending staff</div>';
+  res.style.display='block'; renderMap();
+});
+res.addEventListener('click',e=>{ const el=e.target.closest('[data-pid]'); if(!el) return; const pid=+el.dataset.pid, w=whereIs(pid); sel=w==='U'?null:w; flashPid=pid; hits=new Set(w&&w!=='U'?[w]:[]); res.style.display='none'; renderAll(); });
+document.addEventListener('click',e=>{ if(!e.target.closest('.search')) res.style.display='none'; });
+q.addEventListener('keydown',e=>{ if(e.key==='Escape'){ q.value=''; hits=new Set(); res.style.display='none'; renderMap(); } });
+
+// ---------- Excel ----------
+$('export').onclick=()=>{
+  if(typeof XLSX==='undefined'){ toast('The Excel tool did not load. Check the internet connection.',true); return; }
+  const rows=[['Table','Group of table','Emp No','Name','Designation','Department','Own group','HOD','Attending']];
+  const add=(t,ids)=>ids.slice().sort((a,b)=>(ownOf(P[a])+P[a].dp+P[a].n).localeCompare(ownOf(P[b])+P[b].dp+P[b].n)).forEach(pid=>{ const p=P[pid], own=t==='Not yet seated'?null:ownerOf(t); rows.push([t,own?own.name:'',p.e,p.n,p.d,p.dp,ownOf(p),p.h,p.st==='Attending'?'Yes':'No']); });
+  TABLES.forEach(t=>add(t,S.tables[t])); add('Not yet seated',S.un);
+  const sum=[['Table','Group of table','People','Free seats','Who sits there']];
+  TABLES.forEach(t=>{ const own=ownerOf(t); sum.push([t,own?own.name:'Spare',S.tables[t].length,CAP-S.tables[t].length,tableGroups(t).map(([k,c])=>k+' ('+c+')').join(', ')]); });
+  const wb=XLSX.utils.book_new(), ws=XLSX.utils.aoa_to_sheet(rows), ws2=XLSX.utils.aoa_to_sheet(sum);
+  ws['!cols']=[7,26,9,32,40,32,30,30,9].map(w=>({wch:w})); ws2['!cols']=[{wch:7},{wch:30},{wch:8},{wch:10},{wch:90}];
+  XLSX.utils.book_append_sheet(wb,ws,'Seating'); XLSX.utils.book_append_sheet(wb,ws2,'Tables');
+  XLSX.writeFile(wb,'Metro Night 2026 - Seating '+new Date().toISOString().slice(0,10)+'.xlsx');
+};
+
+function toast(m,warn){ const t=$('toast'); t.textContent=m; t.className='toast show'+(warn?' warn':''); clearTimeout(toast._t); toast._t=setTimeout(()=>t.className='toast'+(warn?' warn':''),3000); }
+function renderAll(){ renderMap(); renderLegend(); renderPanel(); setStatus($('status').textContent,$('status').className.replace('status','').trim()); }
+$('undo').onclick=undo; $('reload').onclick=()=>load();
+document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.target.closest('input')){ e.preventDefault(); undo(); } });
+// pick up dashboard changes (new staff, not attending) every 2 minutes while idle
+setInterval(()=>{ if(TOKEN && !drag && !pending && document.visibilityState==='visible' && !$('app').hidden) load(true); },120000);
+load();
+})();
+</script>
+</body>
+</html>

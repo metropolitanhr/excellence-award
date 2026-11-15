@@ -165,6 +165,23 @@
 
   footer { text-align: center; color: var(--ink-3); font-size: 12.5px; margin-top: 22px; }
 
+  /* ---------- E-pass (shown after the deadline, once HR switches it on) ---------- */
+  .pass { text-align: center; }
+  .pass .who-n { font-weight: 700; font-size: 19px; line-height: 1.25; }
+  .pass .who-d { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; }
+  .qrbox { display: inline-block; margin: 18px auto 0; padding: 12px; background: #fff; border-radius: 16px; box-shadow: 0 0 0 4px rgba(204, 158, 74, .38); }
+  .qrbox canvas, .qrbox img { display: block; width: 190px; height: 190px; }
+  .ttag { margin: 18px auto 0; width: max-content; padding: 10px 28px 8px; border-radius: 14px; background: linear-gradient(160deg, var(--gold-soft), var(--gold)); color: var(--navy); box-shadow: 0 12px 26px -12px rgba(204, 158, 74, .7); }
+  .ttag small { display: block; font: 700 11px/1 var(--sans); letter-spacing: .22em; }
+  .ttag b { display: block; font: 600 48px/1 var(--serif); margin-top: 3px; }
+  .pfacts { display: grid; grid-template-columns: 1.25fr 1fr 1.1fr; margin: 20px 0 0; text-align: left; }
+  .pfacts div { padding: 2px 10px; }
+  .pfacts div + div { border-left: 1px solid rgba(204, 158, 74, .45); }
+  .pfacts dt { font-size: 11.5px; color: var(--gold); font-weight: 600; }
+  .pfacts dd { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.3; }
+  .perf { height: 1px; margin: 18px -22px; border-top: 1px dashed rgba(247, 235, 224, .3); }
+  .miss .hint + .hint { margin-top: -6px; }
+
   :focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
   [hidden] { display: none !important; }
 
@@ -302,6 +319,31 @@
       <button class="btn quiet" id="again" type="button">Done</button>
     </section>
 
+    <!-- E-pass -->
+    <section class="glass pass" id="sPass" hidden>
+      <p class="step">Your e-pass</p>
+      <div class="who-n" id="pName"></div>
+      <div class="who-d" id="pMeta"></div>
+      <div class="qrbox" id="pQr" role="img" aria-label="Your entry QR code"></div>
+      <div class="ttag" id="pTag" hidden><small>TABLE</small><b id="pTable"></b></div>
+      <div class="perf"></div>
+      <dl class="pfacts">
+        <div><dt>Date</dt><dd>20th November 2026</dd></div>
+        <div><dt>Time</dt><dd>4.30 P.M.</dd></div>
+        <div><dt>Venue</dt><dd>Monarch Imperial</dd></div>
+      </dl>
+      <p class="note">Please save a screenshot of this pass and show it at the entrance.</p>
+      <button class="btn quiet" id="pDone" type="button">Log out</button>
+    </section>
+
+    <!-- Not attending -->
+    <section class="glass miss" id="sMiss" hidden>
+      <h2 id="mTitle">We'll miss you</h2>
+      <p class="hint">You've let us know you can't join us at the Metropolitan Excellence Awards and Year End Party. It won't be quite the same without you.</p>
+      <p class="hint">If your plans change, please contact HR (2624 - Dakshila). We'd love to have you there.</p>
+      <button class="btn quiet" id="mDone" type="button">Done</button>
+    </section>
+
     <!-- Closed -->
     <section class="glass" id="sClosed" hidden>
       <h2>Online confirmation has closed</h2>
@@ -314,6 +356,7 @@
 
 <script src="config.js"></script>
 <script src="api.js"></script>
+<script src="qrcode.min.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -321,7 +364,7 @@
   var wide = function () { return window.innerWidth >= 1000; };
 
   function show(id) {
-    ['s1', 's2', 's3', 'sClosed'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['s1', 's2', 's3', 'sClosed', 'sPass', 'sMiss'].forEach(function (s) { $(s).hidden = s !== id; });
     var el = $(id); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     if (!wide()) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 24), behavior: 'smooth' });
   }
@@ -360,9 +403,13 @@
     if (!/^\d{4}$/.test(nic)) { $('e1').textContent = 'Enter the last 4 numbers of your NIC.'; $('nic').focus(); return; }
     busy($('b1'), true, 'Checking');
     var r = await window.rsvpCall({ action: 'verify', emp: emp, nic: nic });
-    busy($('b1'), false, 'Continue');
+    busy($('b1'), false, $('b1').dataset.label || 'Continue');
     if (!r.ok) { $('e1').textContent = r.error || 'Something went wrong. Please try again.'; return; }
-    if (!r.open) { show('sClosed'); return; }
+    if (!r.open) {
+      if (r.view === 'pass') { showPass(r); return; }
+      if (r.view === 'miss') { $('mTitle').textContent = 'We\u2019ll miss you, ' + firstName(r.name); show('sMiss'); return; }
+      show('sClosed'); return;
+    }
     cred = { emp: emp, nic: nic };
     $('wInit').textContent = initials(r.name);
     $('wName').textContent = r.name;
@@ -410,6 +457,37 @@
   });
 
   $('again').addEventListener('click', function () { $('emp').value = ''; $('nic').value = ''; show('s1'); });
+
+  // ---------- After the deadline: e-pass ----------
+  function firstName(n) {
+    var p = String(n || '').split(/\s+/).filter(function (w) { return w.replace(/\./g, '').length > 2; });
+    return p.length ? p[0] : String(n || '');
+  }
+  function showPass(r) {
+    $('pName').textContent = r.name;
+    $('pMeta').textContent = r.pass.emp + ' \u00b7 ' + (r.department || '');
+    $('pTable').textContent = r.pass.table || '';
+    $('pTag').hidden = !r.pass.table;
+    var box = $('pQr'); box.innerHTML = '';
+    if (window.QRCode) new QRCode(box, { text: r.pass.code, width: 380, height: 380, colorDark: '#0A1D4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    else box.textContent = r.pass.code;
+    show('sPass');
+  }
+  function reset() { $('emp').value = ''; $('nic').value = ''; $('pQr').innerHTML = ''; show('s1'); }
+  $('pDone').addEventListener('click', reset);
+  $('mDone').addEventListener('click', reset);
+
+  // On load: before the deadline nothing changes. After it, show the closed message, or the e-pass login once HR switches it on.
+  window.rsvpCall({ action: 'info' }, 2).then(function (r) {
+    if (!r || !r.ok || r.open) return;
+    if (!r.passes) { show('sClosed'); return; }
+    var s1 = $('s1');
+    s1.querySelector('.step').textContent = 'Metropolitan Excellence Awards';
+    s1.querySelector('h2').textContent = 'Get your e-pass';
+    s1.querySelector('.hint').innerHTML = 'Log in with your employee number and the last 4 numbers of your NIC to see your entry QR code' + ' and table number.';
+    $('b1').textContent = 'Show my e-pass';
+    $('b1').dataset.label = 'Show my e-pass';
+  });
 })();
 </script>
 </body>

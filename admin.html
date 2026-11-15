@@ -96,6 +96,17 @@
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   [hidden] { display: none !important; }
   @media (max-width: 640px) { .hide-sm { display: none; } .kpi .v { font-size: 24px; } }
+  .ev { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: grid; gap: 10px; }
+  .ev .r { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+  .ev .lab { color: var(--muted); font-weight: 600; min-width: 120px; }
+  .ev code { background: var(--bg); padding: 4px 8px; border-radius: 6px; font-size: 12.5px; word-break: break-all; }
+  .ev .sp { flex: 1; }
+  .ev .on { color: var(--yes); } .ev .off { color: var(--pend); }
+  .p-in { background: #E7EEF9; color: #1D3F7A; }
+  .qrw { display: flex; gap: 14px; align-items: center; margin-top: 12px; padding: 10px 12px; background: var(--bg); border-radius: 10px; }
+  .qrw .q canvas, .qrw .q img { width: 110px; height: 110px; display: block; background: #fff; padding: 6px; border-radius: 8px; }
+  .qrw .t { font-size: 12.5px; color: var(--muted); }
+  .qrw .t b { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -117,11 +128,17 @@
     <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Excellence Awards and Year End Party</b>
     <span class="meta" id="meta"></span>
     <span class="sp"></span>
+    <a id="seatLink" href="seating.html" style="color:#f3f1ea;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;text-decoration:none">Seating plan</a>
+    <button id="addBtn" style="background:#CC9E4A;color:#1c1407;border-color:#CC9E4A;font-weight:700">+ Add staff member</button>
     <button id="xlsx">Download Excel</button>
     <button id="refresh">Refresh</button>
     <button id="logout">Log out</button>
   </div>
   <main>
+    <div class="ev" id="ev">
+      <div class="r"><span class="lab">E-passes</span><b id="evState"></b><span class="sp"></span><button class="btn" id="evToggle" type="button"></button></div>
+      <div class="r"><span class="lab">Scanner link</span><code id="evLink"></code><span>PIN <b id="evPin"></b></span><button class="btn" id="evCopy" type="button">Copy link and PIN</button></div>
+    </div>
     <div class="kpis" id="kpis"></div>
     <div class="goal">
       <div class="row"><span id="goalTxt"></span><span class="sub" id="goalSub"></span></div>
@@ -154,6 +171,8 @@
           <option value="Not attending">Not attending</option>
           <option value="responded">Responded</option>
           <option value="admin">Entered by admin</option>
+          <option value="arrived">Arrived (checked in)</option>
+          <option value="notarrived">Attending, not arrived yet</option>
         </select>
         <select id="fDept"><option value="">All departments</option></select>
         <select id="fHod"><option value="">All HODs</option></select>
@@ -175,6 +194,7 @@
     <h3 id="mName"></h3>
     <div class="sub" id="mInfo"></div>
     <dl class="det" id="mDet"></dl>
+    <div class="qrw" id="mPass" hidden><div class="q" id="mQr"></div><div class="t"><b>E-pass QR</b><br>This is the code the entrance team scans. Staff see it after logging in, once e-passes are switched on.<br><button type="button" class="linkbtn" id="mUncheck" hidden>Undo check-in</button></div></div>
     <label>Response</label>
     <div class="seg" id="mStatus">
       <button type="button" data-v="Attending" aria-pressed="false">Attending</button>
@@ -196,8 +216,43 @@
   </form>
 </dialog>
 
+<dialog id="addDlg">
+  <form class="dlg" id="af" method="dialog">
+    <h3>Add a staff member</h3>
+    <div class="sub">They are added to the Staff sheet. Their e-pass QR works straight away, and the seating plan picks them up.</div>
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:0 10px">
+      <div><label for="aEmp">Employee no.</label><input id="aEmp" inputmode="numeric" maxlength="6" placeholder="e.g. 001234"></div>
+      <div><label for="aName">Name</label><input id="aName" maxlength="120" placeholder="Name as on the e-pass"></div>
+    </div>
+    <label for="aDes">Designation <span class="sub">(optional)</span></label><input id="aDes" maxlength="120">
+    <label for="aDept">Department</label><input id="aDept" maxlength="120" list="aDeptList" placeholder="e.g. Group Finance">
+    <datalist id="aDeptList"></datalist>
+    <label for="aGroup">Sits with (SBU or department group)</label><select id="aGroup"></select>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:0 10px">
+      <div><label for="aHod">HOD <span class="sub">(optional)</span></label><input id="aHod" maxlength="120" list="aHodList"><datalist id="aHodList"></datalist></div>
+      <div><label for="aCo">Company</label><select id="aCo"><option>MTPL</option><option>MATL</option><option>Qualiprint</option><option>Other</option></select></div>
+    </div>
+    <label for="aNic">Last 4 numbers of NIC <span class="sub">(optional, lets them log in to see their e-pass)</span></label>
+    <input id="aNic" inputmode="numeric" maxlength="4" placeholder="e.g. 1234">
+    <label>Response</label>
+    <div class="seg" id="aStatus" style="grid-template-columns:1fr 1fr 1fr">
+      <button type="button" data-v="Attending" aria-pressed="true">Attending</button>
+      <button type="button" data-v="Not attending" aria-pressed="false">Not attending</button>
+      <button type="button" data-v="" aria-pressed="false">Not known yet</button>
+    </div>
+    <label class="sub" style="display:flex;gap:8px;align-items:center;font-weight:500" id="aSeatRow"><input type="checkbox" id="aSeat" checked style="width:auto"> Give them a free seat with their group now</label>
+    <label for="aWa">WhatsApp number <span class="sub">(optional)</span></label>
+    <input id="aWa" inputmode="numeric" maxlength="10" placeholder="10 digits, e.g. 0771234567">
+    <label for="aNote">Note <span class="sub">(optional)</span></label>
+    <input id="aNote" maxlength="300" placeholder="e.g. Joined on 10 Nov">
+    <div class="err" id="aErr"></div>
+    <div class="acts"><span class="sp"></span><button type="button" class="btn" id="aCancel">Cancel</button><button type="button" class="btn pri" id="aSave">Add</button></div>
+  </form>
+</dialog>
+
 <script src="config.js"></script>
 <script src="api.js"></script>
+<script src="qrcode.min.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -238,18 +293,20 @@
       if (r.auth === false) { store('mn_tok', null); $('app').hidden = true; $('login').hidden = false; $('le').textContent = r.error; return; }
       toast(r.error); return;
     }
-    S.admin = r.admin; S.sources = r.sources;
+    S.admin = r.admin; S.sources = r.sources; S.passes = !!r.passes; S.pin = r.pin || ''; S.groups = r.groups || [];
+    renderEvent();
     S.rows = r.rows.map(function (a) { var o = {}; r.cols.forEach(function (c, i) { o[c] = a[i]; }); return o; });
     $('meta').textContent = 'Signed in as ' + r.admin + '. Updated ' + when(r.generated) + '. ' + (r.open ? 'Staff can respond until ' + when(r.deadline) + '.' : 'Closed for staff responses.');
     fillFilters(); render();
   }
   $('refresh').addEventListener('click', refresh);
-  setInterval(function () { if (S.token && !$('app').hidden && !$('dlg').open && document.visibilityState === 'visible') refresh(); }, 120000);
+  setInterval(function () { if (S.token && !$('app').hidden && !$('dlg').open && !$('addDlg').open && document.visibilityState === 'visible') refresh(); }, 120000);
 
   // ---------- summary ----------
   function counts(list) {
-    var c = { total: list.length, yes: 0, no: 0, pend: 0, adm: 0 };
+    var c = { total: list.length, yes: 0, no: 0, pend: 0, adm: 0, arr: 0 };
     list.forEach(function (r) {
+      if (r.arrived) c.arr++;
       if (r.status === 'Attending') c.yes++;
       else if (r.status === 'Not attending') c.no++; else c.pend++;
       if (r.source && r.source.indexOf('Admin') === 0) c.adm++;
@@ -265,7 +322,8 @@
       ['Attending', c.yes, pct(c.yes, c.total) + '% of staff', 'Attending'],
       ['Not attending', c.no, pct(c.no, c.total) + '%', 'Not attending'],
       ['Pending', c.pend, need > c.resp ? (need - c.resp) + ' more to reach 95%' : '95% target reached', 'pending'],
-      ['Admin entered', c.adm, 'verbal / phone / HOD', 'admin']
+      ['Admin entered', c.adm, 'verbal / phone / HOD', 'admin'],
+      ['Arrived', c.arr, c.yes ? c.arr + ' of ' + c.yes + ' attending' : 'on the event day', 'arrived']
     ];
     $('kpis').innerHTML = k.map(function (x) { return '<button type="button" class="kpi" data-f="' + x[3] + '"><div class="l">' + x[0] + '</div><div class="v">' + x[1] + '</div><div class="s">' + esc(x[2]) + '</div><div class="go">View list</div></button>'; }).join('');
     $('goalTxt').innerHTML = '<b>' + pct(c.resp, c.total) + '%</b> responded · target 95% = ' + need + ' of ' + c.total;
@@ -328,6 +386,8 @@
       if (st === 'pending' && r.status) return false;
       if (st === 'admin' && !(r.source && r.source.indexOf('Admin') === 0)) return false;
       if (st === 'responded' && !r.status) return false;
+      if (st === 'arrived') return !!r.arrived;
+      if (st === 'notarrived') return r.status === 'Attending' && !r.arrived;
       if (st && st !== 'pending' && st !== 'admin' && st !== 'responded' && r.status !== st) return false;
       return true;
     });
@@ -347,8 +407,10 @@
       var pill = r.status === 'Attending' ? '<span class="pill p-yes">Attending</span>' : r.status === 'Not attending' ? '<span class="pill p-no">Not attending</span>' : '<span class="pill p-pend">Pending</span>';
       var src = r.source && r.source.indexOf('Admin') === 0 ? '<div><span class="pill p-adm" title="' + esc(r.by + (r.note ? ': ' + r.note : '')) + '">' + esc(r.source.replace('Admin - ', 'Admin · ')) + '</span></div>' : '';
       var noNic = r.canSelf ? '' : '<div class="sub">No NIC on file, admin only</div>';
+      var arr = r.arrived ? '<div><span class="pill p-in">Arrived ' + esc(clock(r.arrived)) + '</span></div>' : '';
+      var tbl = r.table ? '<div class="sub">Table ' + esc(r.table) + '</div>' : '';
       return '<tr><td>' + esc(r.emp) + '</td><td><a href="#" class="nm" data-emp="' + esc(r.emp) + '">' + esc(r.name) + '</a><div class="sub">' + esc(r.designation) + '</div>' + noNic + '</td><td class="hide-sm">' + esc(r.dept) + '</td><td class="hide-sm">' + esc(r.hod) +
-        '</td><td>' + pill + src + '</td><td class="hide-sm">' + esc(prettyWa(r.whatsapp)) + '</td><td class="hide-sm sub" style="font-family:ui-monospace,Consolas,monospace">' + esc(r.ref) + '</td><td class="hide-sm sub">' + esc(when(r.updated)) +
+        '</td><td>' + pill + src + arr + tbl + '</td><td class="hide-sm">' + esc(prettyWa(r.whatsapp)) + '</td><td class="hide-sm sub" style="font-family:ui-monospace,Consolas,monospace">' + esc(r.ref) + '</td><td class="hide-sm sub">' + esc(when(r.updated)) +
         '</td><td><button class="btn sm" data-emp="' + esc(r.emp) + '">View / mark</button></td></tr>';
     }).join('') + '</tbody>';
     $('at').innerHTML = h;
@@ -446,7 +508,9 @@
     var pend = S.rows.filter(function (r) { return !r.status; }).sort(bySort);
     XL('Excellence-Award-RSVP_' + stamp() + '.xlsx', [
       { name: 'Confirmed (' + conf.length + ')', head: XHEAD.concat(['Response']), widths: [10, 32, 15, 32, 32, 15], rows: conf.map(function (r) { return xrow(r).concat([r.status]); }) },
-      { name: 'Not confirmed (' + pend.length + ')', head: XHEAD, widths: [10, 32, 15, 32, 32], rows: pend.map(xrow) }
+      { name: 'Not confirmed (' + pend.length + ')', head: XHEAD, widths: [10, 32, 15, 32, 32], rows: pend.map(xrow) },
+      { name: 'Attendance', head: ['Emp No', 'Name', 'Department', 'HOD', 'Table', 'Response', 'Arrived', 'Checked in at', 'How'], widths: [10, 32, 32, 32, 8, 15, 10, 20, 12],
+        rows: S.rows.filter(function (r) { return r.status === 'Attending' || r.arrived; }).sort(bySort).map(function (r) { return [r.emp, r.name, r.dept, r.hod, r.table, r.status, r.arrived ? 'Yes' : 'No', clock(r.arrived), r.arrivedBy]; }) }
     ]);
     toast('Excel downloaded: ' + conf.length + ' confirmed, ' + pend.length + ' not confirmed.');
   });
@@ -479,12 +543,17 @@
     $('mInfo').textContent = [r.designation, r.dept, 'HOD: ' + r.hod].filter(Boolean).join(' · ');
     var det = [['Employee no.', r.emp], ['Company', r.company], ['Response', r.status || 'Pending'], ['Reference', r.ref || '-'], ['WhatsApp', prettyWa(r.whatsapp) || '-'],
       ['Confirmed by', r.status ? (r.source === 'Self' ? 'Employee (online)' : r.source.replace('Admin - ', 'Admin, ') + (r.by ? ' (' + r.by + ')' : '')) : '-'], ['Note', r.note || '-'], ['Last updated', r.updated ? when(r.updated) : '-'],
-      ['Online check', r.canSelf ? 'NIC on file' : 'No NIC on file, admin only']];
+      ['Online check', r.canSelf ? 'NIC on file' : 'No NIC on file, admin only'], ['Sits with', r.group || '-'], ['Table', r.table || (r.status === 'Attending' ? 'Not seated yet (see Seating plan)' : '-')],
+      ['Arrived', r.arrived ? clock(r.arrived) + (r.arrivedBy ? ' (' + r.arrivedBy + ')' : '') : '-']];
     $('mDet').innerHTML = det.map(function (d) { return '<dt>' + d[0] + '</dt><dd>' + esc(d[1]) + '</dd>'; }).join('');
     $('mSource').innerHTML = '<option value="">Choose…</option>' + S.sources.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('');
     mStatus(r.status || '');
     $('mWa').value = r.whatsapp ? '0' + String(r.whatsapp).slice(2) : ''; $('mNote').value = ''; $('mErr').textContent = '';
     $('mClear').hidden = !r.status;
+    $('mPass').hidden = r.status !== 'Attending';
+    $('mQr').innerHTML = '';
+    if (r.status === 'Attending' && window.QRCode && r.qr) new QRCode($('mQr'), { text: r.qr, width: 220, height: 220, colorDark: '#0A1D4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    $('mUncheck').hidden = !r.arrived; $('mUncheck').textContent = 'Undo check-in'; delete $('mUncheck').dataset.armed;
     $('dlg').showModal();
   }
   $('mWa').addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
@@ -495,7 +564,7 @@
     var r = await window.rsvpCall(Object.assign({ action: 'mark', token: S.token, emp: S.edit.emp }, payload), 2);
     $('mSave').disabled = false; $('mClear').disabled = false;
     if (!r.ok) { if (r.auth === false) { $('dlg').close(); store('mn_tok', null); $('app').hidden = true; $('login').hidden = false; $('le').textContent = r.error; return; } $('mErr').textContent = r.error; return; }
-    $('dlg').close(); toast(r.cleared ? 'Response cleared.' : 'Saved.'); refresh();
+    $('dlg').close(); toast((r.cleared ? 'Response cleared.' : 'Saved.') + (r.freedTable ? ' Their seat at table ' + r.freedTable + ' is now free.' : '')); refresh();
   }
   $('mSave').addEventListener('click', function () {
     if (!M.status) { $('mErr').textContent = 'Choose Attending or Not attending.'; return; }
@@ -508,6 +577,79 @@
     if (!$('mClear').dataset.armed) { $('mClear').dataset.armed = '1'; setTimeout(function () { delete $('mClear').dataset.armed; $('mClear').textContent = 'Clear response'; }, 3000); return; }
     delete $('mClear').dataset.armed; $('mClear').textContent = 'Clear response';
     saveMark({ status: 'Clear', note: $('mNote').value });
+  });
+
+  // ---------- event night: e-pass switch, scanner link, undo check-in ----------
+  function clock(iso) {
+    if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return '';
+    var t = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' });
+    var day = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Colombo' });
+    return day + ', ' + t.replace(':', '.').replace(/\s?am$/i, ' A.M.').replace(/\s?pm$/i, ' P.M.');
+  }
+  function scanLink() { return location.href.replace(/admin\.html.*$/, '').replace(/[?#].*$/, '') + 'checkin.html'; }
+  function renderEvent() {
+    $('evState').innerHTML = S.passes ? '<span class="on">Visible to staff</span> <span class="sub">Attending staff see their QR when they log in.</span>' : '<span class="off">Hidden from staff</span> <span class="sub">Only you can see the QR codes, in View / mark.</span>';
+    $('evToggle').textContent = S.passes ? 'Hide e-passes from staff' : 'Show e-passes to staff';
+    delete $('evToggle').dataset.armed;
+    $('evLink').textContent = scanLink(); $('evPin').textContent = S.pin || '-';
+  }
+  $('evToggle').addEventListener('click', async function () {
+    var b = this;
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = S.passes ? 'Click again to hide' : 'Click again to show to all staff'; setTimeout(function () { if (b.dataset.armed) renderEvent(); }, 4000); return; }
+    delete b.dataset.armed; b.disabled = true;
+    var r = await window.rsvpCall({ action: 'passes', token: S.token, on: !S.passes }, 2);
+    b.disabled = false;
+    if (!r.ok) { toast(r.error); return; }
+    S.passes = r.passes; renderEvent(); toast(r.passes ? 'E-passes are now visible to staff.' : 'E-passes are hidden from staff.');
+  });
+  $('evCopy').addEventListener('click', function () { copy('Entrance check-in for the Metropolitan Excellence Awards\nLink: ' + scanLink() + '\nPIN: ' + S.pin + '\nOpen the link on your phone, enter the PIN and allow the camera.'); });
+  $('mUncheck').addEventListener('click', async function () {
+    var b = this;
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to undo check-in'; return; }
+    delete b.dataset.armed; b.disabled = true;
+    var r = await window.rsvpCall({ action: 'uncheck', token: S.token, emp: S.edit.emp }, 2);
+    b.disabled = false;
+    if (!r.ok) { $('mErr').textContent = r.error; return; }
+    $('dlg').close(); toast('Check-in undone.'); refresh();
+  });
+
+  // ---------- add a staff member ----------
+  var A = { status: 'Attending' };
+  function aStatus(v) { A.status = v; seg('aStatus', v); $('aSeatRow').hidden = v !== 'Attending'; }
+  $('aStatus').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) aStatus(b.dataset.v); });
+  $('addBtn').addEventListener('click', function () {
+    ['aEmp', 'aName', 'aDes', 'aDept', 'aHod', 'aNic', 'aWa', 'aNote'].forEach(function (id) { $(id).value = ''; });
+    $('aCo').value = 'MTPL'; $('aSeat').checked = true; $('aErr').textContent = ''; aStatus('Attending');
+    $('aGroup').innerHTML = '<option value="">Choose…</option>' + (S.groups || []).map(function (g) { return '<option>' + esc(g) + '</option>'; }).join('');
+    function uniq(k) { var m = {}; S.rows.forEach(function (r) { if (r[k]) m[r[k]] = 1; }); return Object.keys(m).sort(); }
+    $('aDeptList').innerHTML = uniq('dept').map(function (v) { return '<option value="' + esc(v) + '">'; }).join('');
+    $('aHodList').innerHTML = uniq('hod').map(function (v) { return '<option value="' + esc(v) + '">'; }).join('');
+    $('addDlg').showModal(); $('aEmp').focus();
+  });
+  // Picking a department fills in the usual group for it
+  $('aDept').addEventListener('change', function () {
+    if ($('aGroup').value) return;
+    var c = {}; S.rows.forEach(function (r) { if (r.dept === $('aDept').value && r.group) c[r.group] = (c[r.group] || 0) + 1; });
+    var best = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0]; if (best) $('aGroup').value = best;
+  });
+  ['aEmp', 'aNic', 'aWa'].forEach(function (id) { $(id).addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); }); });
+  $('aCancel').addEventListener('click', function () { $('addDlg').close(); });
+  $('aSave').addEventListener('click', async function () {
+    var emp = $('aEmp').value, name = $('aName').value.trim();
+    if (!emp) { $('aErr').textContent = 'Enter the employee number.'; return; }
+    if (!name) { $('aErr').textContent = 'Enter the name.'; return; }
+    if (!$('aDept').value.trim()) { $('aErr').textContent = 'Enter the department.'; return; }
+    if (!$('aGroup').value) { $('aErr').textContent = 'Choose who they sit with.'; return; }
+    if ($('aNic').value && $('aNic').value.length !== 4) { $('aErr').textContent = 'NIC: enter exactly 4 numbers, or leave it blank.'; return; }
+    $('aSave').disabled = true; $('aSave').textContent = 'Adding…'; $('aErr').textContent = '';
+    var r = await window.rsvpCall({ action: 'addstaff', token: S.token, emp: emp, name: name, designation: $('aDes').value, dept: $('aDept').value.trim(), group: $('aGroup').value,
+      hod: $('aHod').value, company: $('aCo').value, nic: $('aNic').value, status: A.status, autoSeat: A.status === 'Attending' && $('aSeat').checked,
+      whatsapp: $('aWa').value, note: $('aNote').value }, 1);
+    $('aSave').disabled = false; $('aSave').textContent = 'Add';
+    if (!r.ok) { if (r.auth === false) { $('addDlg').close(); store('mn_tok', null); $('app').hidden = true; $('login').hidden = false; $('le').textContent = r.error; return; } $('aErr').textContent = r.error; return; }
+    $('addDlg').close();
+    toast(name + ' added' + (r.table ? ', seated at table ' + r.table : A.status === 'Attending' ? ', not seated yet' : '') + '.' + (r.canSelf ? '' : ' No NIC, so only admins see their e-pass.'));
+    await refresh();
   });
 
   // ---------- tabs ----------

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A1D4B">
+<title>Entrance Check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0A1D4B; --crimson: #9E0E18; --crimson-hi: #C50337; --gold: #CC9E4A; --gold-soft: #E2C48A;
+    --ivory: #F7EBE0; --ink-2: rgba(247,235,224,.74); --ink-3: rgba(247,235,224,.55); --line: rgba(247,235,224,.22);
+    --serif: "Cormorant Garamond", Georgia, serif; --sans: Manrope, "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body { min-height: 100vh; min-height: 100dvh; color: var(--ivory); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+    background: radial-gradient(80% 40% at 50% -6%, rgba(226,196,138,.22), transparent 70%), radial-gradient(90% 40% at 50% 110%, rgba(197,3,55,.35), transparent 72%), linear-gradient(180deg, #0A1D4B, #121226 70%, #171721); background-attachment: fixed; }
+  button, input { font: inherit; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 14px 16px 28px; }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .plq { background: rgba(247,235,224,.94); border-radius: 10px; padding: 5px 10px; display: inline-flex; }
+  .plq img { width: 92px; display: block; }
+  .head b { font: 600 22px/1.1 var(--serif); }
+  .head .sp { flex: 1; }
+  .chip { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid var(--line); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+  .glass { margin-top: 18px; border-radius: 20px; padding: 22px 18px; background: linear-gradient(155deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); border: 1px solid var(--line); }
+  h1 { font: 600 28px/1.1 var(--serif); margin: 0 0 6px; }
+  .hint { color: var(--ink-2); font-size: 14px; margin: 0 0 6px; }
+  label { display: block; font-weight: 600; font-size: 13.5px; margin: 16px 0 7px; }
+  .inp { width: 100%; height: 52px; padding: 0 14px; font-weight: 600; font-size: 18px; letter-spacing: .06em; color: var(--ivory); background: rgba(255,255,255,.08); border: 1px solid rgba(247,235,224,.3); border-radius: 14px; outline: none; }
+  .inp:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(204,158,74,.22); }
+  .btn { width: 100%; height: 52px; margin-top: 16px; border: 0; border-radius: 14px; font-weight: 700; font-size: 16px; color: #fff; background: linear-gradient(180deg, var(--crimson-hi), var(--crimson)); cursor: pointer; }
+  .btn:disabled { opacity: .6; }
+  .btn.quiet { background: rgba(255,255,255,.08); border: 1px solid var(--line); color: var(--ivory); }
+  .err { color: #FF9A9A; font-size: 13.5px; margin-top: 10px; min-height: 1em; }
+  .cam { position: relative; margin-top: 14px; border-radius: 18px; overflow: hidden; background: #0b0d14; min-height: 300px; }
+  #reader { width: 100%; }
+  #reader video { width: 100% !important; display: block; border-radius: 18px; }
+  #reader img, #reader__dashboard_section_csr, #reader__header_message { display: none !important; }
+  .camMsg { padding: 26px 18px; text-align: center; color: var(--ink-2); font-size: 14px; }
+  .camMsg .btn { margin-top: 12px; }
+  .tip { text-align: center; color: var(--ink-3); font-size: 13px; margin: 10px 0 0; }
+  .segs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .segs button { height: 50px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--ivory); font-weight: 700; cursor: pointer; }
+  .segs button[aria-pressed=true] { border-color: var(--gold); background: rgba(204,158,74,.2); }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--line); margin-top: 8px; }
+  .row .n { font-weight: 700; font-size: 15px; line-height: 1.25; }
+  .row .d { font-size: 12.5px; color: var(--ink-3); }
+  .row button { padding: 10px 14px; border-radius: 12px; border: 0; font-weight: 800; font-size: 14px; color: #fff; background: #1f8a58; cursor: pointer; white-space: nowrap; }
+  .row .st { font-size: 12.5px; font-weight: 700; white-space: nowrap; text-align: right; }
+  .row .st.in { color: var(--gold-soft); } .row .st.no { color: #FF9A9A; }
+  .empty { color: var(--ink-3); font-size: 13.5px; text-align: center; margin: 14px 0; }
+  .foot { display: flex; justify-content: space-between; margin-top: 18px; font-size: 12.5px; color: var(--ink-3); }
+  .foot a { color: var(--ink-2); }
+
+  .res { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 28px 22px calc(28px + env(safe-area-inset-bottom)); text-align: center; color: #fff; }
+  .res[hidden] { display: none; }
+  .res.ok { background: linear-gradient(180deg, #23955f, #136343); }
+  .res.warn { background: linear-gradient(180deg, #d0911a, #8a5d06); }
+  .res.bad { background: linear-gradient(180deg, #c62c43, #7d1222); }
+  .res.wait { background: linear-gradient(180deg, #23314f, #121a30); }
+  .res .in { width: 100%; max-width: 420px; }
+  .res .icon { width: 84px; height: 84px; margin: 0 auto 12px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; font: 800 44px/1 var(--sans); }
+  .res .big { font: 800 27px/1.15 var(--sans); }
+  .res .name { font: 800 24px/1.2 var(--sans); margin-top: 18px; }
+  .res .det { font-size: 15px; opacity: .92; margin-top: 4px; }
+  .res .tbl { margin: 18px auto 0; padding: 10px 30px; border-radius: 16px; background: rgba(255,255,255,.95); color: #12203f; width: max-content; }
+  .res .tbl small { display: block; font: 800 12px var(--sans); letter-spacing: .2em; }
+  .res .tbl b { display: block; font: 800 52px/1 var(--sans); }
+  .res .act { font-size: 16px; font-weight: 700; margin-top: 18px; padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,.2); }
+  .res .btn { margin-top: 22px; background: rgba(255,255,255,.96); color: #12203f; height: 58px; font-size: 18px; }
+  .spin { width: 40px; height: 40px; margin: 0 auto 14px; border: 4px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="plq"><img src="logo.png" alt="Metropolitan"></span>
+    <b>Check-in</b>
+    <span class="sp"></span>
+    <span class="chip" id="count" hidden>This phone: 0</span>
+  </div>
+
+  <!-- PIN -->
+  <section class="glass" id="vPin">
+    <h1>Entrance check-in</h1>
+    <p class="hint">Metropolitan Excellence Awards and Year End Party. For the entrance team only.</p>
+    <form id="pf" novalidate>
+      <label for="pin">Scanner PIN</label>
+      <input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="6 digits">
+      <button class="btn" id="pb" type="submit">Start</button>
+      <div class="err" id="pe" role="alert"></div>
+    </form>
+  </section>
+
+  <!-- Main -->
+  <section id="vMain" hidden>
+    <div id="vScan">
+      <div class="cam">
+        <div id="reader"></div>
+        <div class="camMsg" id="camMsg" hidden></div>
+      </div>
+      <p class="tip">Hold the guest's QR code inside the box.</p>
+    </div>
+    <div id="vSearch" hidden>
+      <input class="inp" id="q" type="search" autocomplete="off" placeholder="Employee number or name" style="margin-top:14px">
+      <div id="list"></div>
+    </div>
+    <div class="segs">
+      <button type="button" id="tScan" aria-pressed="true">Scan QR</button>
+      <button type="button" id="tSearch" aria-pressed="false">Search</button>
+    </div>
+    <div class="foot"><span>Problems? Send the guest to the HR desk.</span><a href="#" id="out">Log out</a></div>
+  </section>
+</div>
+
+<div class="res" id="res" hidden><div class="in" id="resIn"></div></div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="html5-qrcode.min.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PIN = '', scanner = null, busy = false, mode = 'scan', count = 0, lastCode = '', lastAt = 0;
+
+  function sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function sset(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+  function lget(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lset(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function clock(iso) {
+    if (!iso) return '';
+    var d = new Date(iso); if (isNaN(d)) return '';
+    var t = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Colombo' });
+    return t.replace(':', '.').replace(/\s?am$/i, ' A.M.').replace(/\s?pm$/i, ' P.M.');
+  }
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function setCount(n) { count = n; lset('mea_ci_count', String(n)); $('count').textContent = 'This phone: ' + n; }
+
+  // ---------- PIN ----------
+  $('pin').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
+  $('pf').addEventListener('submit', async function (e) {
+    e.preventDefault(); $('pe').textContent = '';
+    var p = $('pin').value.trim();
+    if (!/^\d{6}$/.test(p)) { $('pe').textContent = 'Enter the 6-digit PIN from HR.'; return; }
+    $('pb').disabled = true; $('pb').textContent = 'Checking…';
+    var r = await window.rsvpCall({ action: 'pin', pin: p }, 2);
+    $('pb').disabled = false; $('pb').textContent = 'Start';
+    if (!r.ok) { $('pe').textContent = r.error || 'Could not check the PIN.'; return; }
+    PIN = p; sset('mea_pin', p); begin();
+  });
+  $('out').addEventListener('click', function (e) { e.preventDefault(); sset('mea_pin', null); location.reload(); });
+
+  function begin() {
+    $('vPin').hidden = true; $('vMain').hidden = false; $('count').hidden = false;
+    setCount(parseInt(lget('mea_ci_count') || '0', 10) || 0);
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {}
+    setMode('scan');
+  }
+
+  // ---------- camera ----------
+  function camError(msg) {
+    $('camMsg').hidden = false;
+    $('camMsg').innerHTML = esc(msg) + '<button class="btn quiet" type="button" id="camRetry">Try the camera again</button><button class="btn quiet" type="button" id="camSearch">Use Search instead</button>';
+    $('camRetry').onclick = function () { $('camMsg').hidden = true; startCam(); };
+    $('camSearch').onclick = function () { setMode('search'); };
+  }
+  function startCam() {
+    if (!window.Html5Qrcode) { camError('The scanner could not load. Check the internet connection and reload the page.'); return; }
+    if (!scanner) scanner = new Html5Qrcode('reader', { verbose: false });
+    if (scanner.isScanning) return;
+    var box = Math.min(250, Math.floor(Math.min(window.innerWidth - 60, 320) * 0.8));
+    scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: box, height: box }, aspectRatio: 1 }, onCode, function () {})
+      .catch(function () { camError('The camera did not start. Allow camera access for this page (tap the icon next to the web address), then try again.'); });
+  }
+  function stopCam() { if (scanner && scanner.isScanning) return scanner.stop().catch(function () {}); return Promise.resolve(); }
+  function pauseCam() { try { if (scanner && scanner.isScanning) scanner.pause(true); } catch (e) {} }
+  function resumeCam() { try { if (scanner && mode === 'scan') scanner.resume(); } catch (e) {} }
+
+  function onCode(text) {
+    if (busy) return;
+    var now = Date.now();
+    if (text === lastCode && now - lastAt < 2500) return;   // same code still in front of the camera
+    lastCode = text; lastAt = now;
+    busy = true; pauseCam();
+    send({ action: 'scan', pin: PIN, code: text });
+  }
+
+  // ---------- results ----------
+  async function send(payload) {
+    showRes('wait', '<div class="spin"></div><div class="big">Checking…</div>', true);
+    var r = await window.rsvpCall(payload, 2);
+    if (!r.ok) {
+      if (r.pin === false) { sset('mea_pin', null); showRes('bad', '<div class="icon">!</div><div class="big">PIN no longer valid</div><div class="act">' + esc(r.error || '') + '</div>', false, function () { location.reload(); }); return; }
+      buzz([60, 60, 60]);
+      showRes('bad', '<div class="icon">!</div><div class="big">Could not check</div><div class="act">' + esc(r.error || 'No connection.') + '<br>Check mobile data and try again.</div>');
+      return;
+    }
+    var p = r.person || {};
+    var who = p.name ? '<div class="name">' + esc(p.name) + '</div><div class="det">' + esc(p.emp) + (p.dept ? ' · ' + esc(p.dept) : '') + '</div>' : '';
+    if (r.result === 'ok') {
+      setCount(count + 1); buzz(120);
+      var tbl = p.table ? '<div class="tbl"><small>TABLE</small><b>' + esc(p.table) + '</b></div>' : '';
+      showRes('ok', '<div class="icon">✓</div><div class="big">Welcome</div>' + who + tbl + '<div class="act">Hand over the tag' + (p.table ? ' and show the way to table ' + esc(p.table) : '') + '.</div>');
+    } else if (r.result === 'already') {
+      buzz([60, 60, 60]);
+      showRes('warn', '<div class="icon">!</div><div class="big">Already checked in</div>' + who + '<div class="act">Checked in at ' + esc(clock(p.arrived)) + '.<br>Ask the guest their name. If it does not match the name above, send them to the HR desk.</div>');
+    } else if (r.result === 'notattending') {
+      buzz([60, 60, 60]);
+      var why = p.status === 'Not attending' ? 'Marked as not attending.' : 'Did not confirm participation.';
+      showRes('bad', '<div class="icon">✕</div><div class="big">Not on the attending list</div>' + who + '<div class="act">' + why + '<br>Please send them to the HR desk.</div>');
+    } else {
+      buzz([60, 60, 60]);
+      showRes('bad', '<div class="icon">✕</div><div class="big">Not a valid pass</div><div class="act">This QR code is not from our system.<br>Please send the guest to the HR desk.</div>');
+    }
+  }
+  function showRes(cls, html, noBtn, onNext) {
+    $('res').className = 'res ' + cls;
+    $('resIn').innerHTML = html + (noBtn ? '' : '<button class="btn" type="button" id="next">Next guest</button>');
+    $('res').hidden = false;
+    if (!noBtn) $('next').onclick = function () { $('res').hidden = true; busy = false; if (onNext) onNext(); else if (mode === 'scan') resumeCam(); else search(); };
+  }
+
+  // ---------- search ----------
+  var tmr = null;
+  $('q').addEventListener('input', function () { clearTimeout(tmr); tmr = setTimeout(search, 350); });
+  async function search() {
+    var q = $('q').value.trim();
+    if (q.length < 2) { $('list').innerHTML = '<p class="empty">Type at least 2 letters or numbers.</p>'; return; }
+    var r = await window.rsvpCall({ action: 'find', pin: PIN, q: q }, 2);
+    if (q !== $('q').value.trim()) return;
+    if (!r.ok) { $('list').innerHTML = '<p class="empty">' + esc(r.error || 'Could not search.') + '</p>'; return; }
+    if (!r.list.length) { $('list').innerHTML = '<p class="empty">No one found. Check the spelling, or send the guest to the HR desk.</p>'; return; }
+    $('list').innerHTML = r.list.map(function (p) {
+      var right = p.status !== 'Attending' ? '<span class="st no">' + (p.status === 'Not attending' ? 'Not attending' : 'Not confirmed') + '</span>'
+        : p.arrived ? '<span class="st in">In at ' + esc(clock(p.arrived)) + '</span>'
+        : '<button type="button" data-emp="' + esc(p.emp) + '">Check in</button>';
+      return '<div class="row"><div><div class="n">' + esc(p.name) + '</div><div class="d">' + esc(p.emp) + ' · ' + esc(p.dept) + (p.table ? ' · Table ' + esc(p.table) : '') + '</div></div>' + right + '</div>';
+    }).join('');
+  }
+  $('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-emp]'); if (!b || busy) return;
+    busy = true; send({ action: 'checkin', pin: PIN, emp: b.dataset.emp });
+  });
+
+  // ---------- tabs ----------
+  function setMode(m) {
+    mode = m;
+    $('tScan').setAttribute('aria-pressed', m === 'scan'); $('tSearch').setAttribute('aria-pressed', m === 'search');
+    $('vScan').hidden = m !== 'scan'; $('vSearch').hidden = m !== 'search';
+    if (m === 'scan') { $('camMsg').hidden = true; startCam(); }
+    else { stopCam(); $('q').focus(); search(); }
+  }
+  $('tScan').addEventListener('click', function () { if (mode !== 'scan') setMode('scan'); });
+  $('tSearch').addEventListener('click', function () { if (mode !== 'search') setMode('search'); });
+
+  var saved = sget('mea_pin');
+  if (saved) { PIN = saved; begin(); }
+})();
+</script>
+</body>
+</html>
