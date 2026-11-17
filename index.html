@@ -179,6 +179,11 @@
   .pfacts div + div { border-left: 1px solid rgba(204, 158, 74, .45); }
   .pfacts dt { font-size: 11.5px; color: var(--gold); font-weight: 600; }
   .pfacts dd { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.3; }
+  .mapw { margin: 16px 0 0; }
+  .mapw .lab { font-size: 12px; color: var(--gold-soft); font-weight: 600; margin-bottom: 6px; }
+  .mapw svg { width: 100%; height: auto; display: block; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--glass-line); }
+  .btn.dl { margin-top: 18px; }
+  .pass .note { color: var(--ink-2); }
   .perf { height: 1px; margin: 18px -22px; border-top: 1px dashed rgba(247, 235, 224, .3); }
   .miss .hint + .hint { margin-top: -6px; }
 
@@ -238,7 +243,7 @@
       <svg class="flourish" viewBox="0 0 132 12" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><path d="M0 6h54M78 6h54" stroke="#CC9E4A" stroke-width="1"/><path d="M66 1.5l4.5 4.5-4.5 4.5-4.5-4.5z" fill="#CC9E4A"/></svg>
       <dl class="details">
         <div><dt>Date</dt><dd>20th November<br> 2026</dd></div>
-        <div><dt>Time</dt><dd>4.30 P.M.</dd></div>
+        <div><dt>Time</dt><dd>4.00 P.M.</dd></div>
         <div><dt>Location</dt><dd>Monarch<br> Imperial</dd></div>
       </dl>
     </header>
@@ -326,13 +331,17 @@
       <div class="who-d" id="pMeta"></div>
       <div class="qrbox" id="pQr" role="img" aria-label="Your entry QR code"></div>
       <div class="ttag" id="pTag" hidden><small>TABLE</small><b id="pTable"></b></div>
+      <div class="mapw" id="pMapW" hidden><div class="lab">Where your table is</div><svg id="pMap" viewBox="0 0 330 260" role="img" aria-label="Hall plan with your table marked"></svg></div>
       <div class="perf"></div>
       <dl class="pfacts">
         <div><dt>Date</dt><dd>20th November 2026</dd></div>
-        <div><dt>Time</dt><dd>4.30 P.M.</dd></div>
+        <div><dt>Time</dt><dd>4.00 P.M.</dd></div>
         <div><dt>Venue</dt><dd>Monarch Imperial</dd></div>
       </dl>
-      <p class="note">Please save a screenshot of this pass and show it at the entrance.</p>
+      <button class="btn dl" id="pDl" type="button">Download e-pass</button>
+      <p class="note">Download your e-pass or take a screenshot, and show it at the entrance.</p>
+      <img id="pImg" alt="Your e-pass picture. Press and hold to save it." hidden style="width:100%;border-radius:14px;margin-top:14px">
+      <p class="note" id="pImgNote" hidden>On iPhone: press and hold the picture above, then choose "Save to Photos".</p>
       <button class="btn quiet" id="pDone" type="button">Log out</button>
     </section>
 
@@ -406,7 +415,7 @@
     busy($('b1'), false, $('b1').dataset.label || 'Continue');
     if (!r.ok) { $('e1').textContent = r.error || 'Something went wrong. Please try again.'; return; }
     if (!r.open) {
-      if (r.view === 'pass') { showPass(r); return; }
+      if (r.view === 'pass') { cred = { emp: emp, nic: nic }; showPass(r); return; }
       if (r.view === 'miss') { $('mTitle').textContent = 'We\u2019ll miss you, ' + firstName(r.name); show('sMiss'); return; }
       show('sClosed'); return;
     }
@@ -444,7 +453,7 @@
     var going = r.status === 'Attending';
     $('dTitle').textContent = going ? 'We look forward to seeing you' : 'Thank you for letting us know';
     $('dText').textContent = (r.changed ? 'Your response has been updated.' : 'Your response has been recorded.') +
-      (going ? ' Join us at Monarch Imperial on 20th November from 4.30 P.M.' : ' You will be missed on the night.');
+      (going ? ' Join us at Monarch Imperial on 20th November from 4.00 P.M.' : ' You will be missed on the night.');
     var full = '94' + wa.slice(1);
     var rows = [['Name', r.name], ['Employee number', cred.emp], ['Response', going ? 'Attending' : 'Not attending'], ['WhatsApp', prettyWa(full)]];
     $('dSum').innerHTML = '';
@@ -463,17 +472,98 @@
     var p = String(n || '').split(/\s+/).filter(function (w) { return w.replace(/\./g, '').length > 2; });
     return p.length ? p[0] : String(n || '');
   }
+  // Hall plan (same numbering as the seating plan): stage on the left, entrances on the right.
+  var HALL = [[66,65,64,63,62,61],[55,56,57,58,59,60],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
+              [27,28,29,30,31,32,33],[26,25,24,23,22,21,20],[13,14,15,16,17,18,19],[12,11,10,9,8,7],[1,2,3,4,5,6]];
+  var HALL_Y = [40,58,76,94,112,138,156,174,192,210];
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function sv(tag, a, txt) { var e = document.createElementNS(SVGNS, tag); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function drawHall(svg, mine) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var lab = function (x, y, txt, size, rot, fill) { var a = { x: x, y: y, 'font-size': size, 'font-weight': 700, fill: fill || '#F7EBE0', 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-family': 'Arial' }; if (rot) a.transform = 'rotate(-90 ' + x + ' ' + y + ')'; svg.appendChild(sv('text', a, txt)); };
+    svg.appendChild(sv('rect', { x: 60, y: 6, width: 190, height: 11, rx: 3, fill: '#2f4f86' })); lab(155, 11.5, 'BUFFET', 6);
+    svg.appendChild(sv('rect', { x: 60, y: 243, width: 190, height: 11, rx: 3, fill: '#2f4f86' })); lab(155, 248.5, 'BUFFET', 6);
+    svg.appendChild(sv('rect', { x: 8, y: 50, width: 14, height: 150, rx: 3, fill: '#3b4a7a' })); lab(15, 125, 'STAGE', 7.5, true);
+    svg.appendChild(sv('rect', { x: 25, y: 50, width: 14, height: 150, rx: 3, fill: '#5a4378' })); lab(32, 125, 'DANCE FLOOR', 6.5, true);
+    svg.appendChild(sv('rect', { x: 268, y: 40, width: 9, height: 60, rx: 2, fill: 'rgba(42,159,214,.6)' })); lab(272.5, 70, 'BAR', 5.5, true);
+    svg.appendChild(sv('rect', { x: 268, y: 150, width: 9, height: 60, rx: 2, fill: 'rgba(42,159,214,.6)' })); lab(272.5, 180, 'BAR', 5.5, true);
+    lab(305, 116, '\u2190', 13, false, '#CC9E4A'); lab(305, 128, 'ENTRY', 6.5, false, '#E2C48A'); lab(305, 140, '\u2190', 13, false, '#CC9E4A');
+    var hit = null;
+    HALL.forEach(function (row, r) { row.forEach(function (t, c) { dot(70 + c * 28, HALL_Y[r], t); }); });
+    if (hit) dot(hit[0], hit[1], hit[2], true);   // drawn last so it sits on top
+    function dot(x, y, t, on) {
+      if (String(t) === String(mine) && !on) { hit = [x, y, t]; return; }
+      svg.appendChild(sv('circle', { cx: x, cy: y, r: on ? 11 : 7.5, fill: on ? '#CC9E4A' : 'rgba(247,235,224,.16)', stroke: on ? '#fff' : 'none', 'stroke-width': on ? 2 : 0 }));
+      svg.appendChild(sv('text', { x: x, y: y + (on ? 3.5 : 2.5), 'font-size': on ? 10 : 6.5, 'font-weight': 700, fill: on ? '#0A1D4B' : 'rgba(247,235,224,.7)', 'text-anchor': 'middle', 'font-family': 'Arial' }, t));
+    }
+    return !!hit;
+  }
+  var passData = null;
   function showPass(r) {
+    passData = r;
     $('pName').textContent = r.name;
     $('pMeta').textContent = r.pass.emp + ' \u00b7 ' + (r.department || '');
     $('pTable').textContent = r.pass.table || '';
     $('pTag').hidden = !r.pass.table;
+    $('pMapW').hidden = !(r.pass.table && drawHall($('pMap'), r.pass.table));
+    $('pImg').hidden = true; $('pImgNote').hidden = true; $('pImg').removeAttribute('src');
     var box = $('pQr'); box.innerHTML = '';
     if (window.QRCode) new QRCode(box, { text: r.pass.code, width: 380, height: 380, colorDark: '#0A1D4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
     else box.textContent = r.pass.code;
     show('sPass');
   }
-  function reset() { $('emp').value = ''; $('nic').value = ''; $('pQr').innerHTML = ''; show('s1'); }
+
+  // ---------- Download e-pass: draws the pass as a picture on the phone ----------
+  function rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+  function fitText(x, text, max, size, weight, family) { do { x.font = weight + ' ' + size + 'px ' + family; size -= 2; } while (x.measureText(text).width > max && size > 20); }
+  function passPicture(r, done) {
+    var W = 1080, H = r.pass.table ? 1920 : 1500, c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
+    var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0A1D4B'); g.addColorStop(.55, '#121226'); g.addColorStop(1, '#3a0a14'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    var rg = x.createRadialGradient(W / 2, -100, 50, W / 2, -100, 900); rg.addColorStop(0, 'rgba(226,196,138,.35)'); rg.addColorStop(1, 'rgba(226,196,138,0)'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
+    x.textAlign = 'center';
+    x.fillStyle = '#E2C48A'; x.font = '600 40px Manrope, Arial'; x.fillText('METROPOLITAN EXCELLENCE AWARDS 2026', W / 2, 140);
+    x.fillStyle = '#F7EBE0'; x.font = '600 64px "Cormorant Garamond", Georgia, serif'; x.fillText('& Year End Party', W / 2, 215);
+    fitText(x, r.name, W - 120, 60, '700', 'Manrope, Arial'); x.fillText(r.name, W / 2, 340);
+    x.fillStyle = 'rgba(247,235,224,.78)'; var meta = r.pass.emp + '  \u00b7  ' + (r.department || ''); fitText(x, meta, W - 120, 38, '500', 'Manrope, Arial'); x.fillText(meta, W / 2, 400);
+    x.fillStyle = '#fff'; rr(x, W / 2 - 290, 450, 580, 580, 40); x.fill();
+    try {
+      var q = document.createElement('div'); new QRCode(q, { text: r.pass.code, width: 520, height: 520, colorDark: '#0A1D4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      var qc = q.querySelector('canvas'); if (qc) x.drawImage(qc, W / 2 - 260, 480, 520, 520);
+    } catch (e) { x.fillStyle = '#0A1D4B'; x.font = '600 34px Manrope, Arial'; x.fillText(r.pass.code, W / 2, 750); }
+    var y = 1070;
+    if (r.pass.table) {
+      var tg = x.createLinearGradient(0, y, 0, y + 190); tg.addColorStop(0, '#E2C48A'); tg.addColorStop(1, '#CC9E4A'); x.fillStyle = tg; rr(x, W / 2 - 170, y, 340, 190, 30); x.fill();
+      x.fillStyle = '#0A1D4B'; x.font = '700 34px Manrope, Arial'; x.fillText('TABLE', W / 2, y + 55); x.font = '600 120px "Cormorant Garamond", Georgia, serif'; x.fillText(r.pass.table, W / 2, y + 165);
+      y += 230;
+    }
+    function finish() {
+      x.fillStyle = '#F7EBE0'; x.font = '600 40px Manrope, Arial'; x.fillText('20th November 2026  \u00b7  4.00 P.M.  \u00b7  Monarch Imperial', W / 2, H - 120);
+      x.fillStyle = 'rgba(247,235,224,.65)'; x.font = '500 30px Manrope, Arial'; x.fillText('Show this at the entrance', W / 2, H - 60);
+      done(c);
+    }
+    if (!r.pass.table) { finish(); return; }
+    var svg = $('pMap').cloneNode(true); svg.setAttribute('xmlns', SVGNS); svg.setAttribute('width', 540); svg.setAttribute('height', 425);
+    var img = new Image();
+    img.onload = function () { x.fillStyle = 'rgba(255,255,255,.05)'; rr(x, (W - 600) / 2, y - 10, 600, 445, 30); x.fill(); x.drawImage(img, (W - 540) / 2, y + 2, 540, 425); finish(); };
+    img.onerror = finish;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  }
+  $('pDl').addEventListener('click', function () {
+    if (!passData) return;
+    var b = this; b.disabled = true; b.textContent = 'Preparing…';
+    var file = 'E-pass ' + passData.pass.emp + '.png';
+    try { passPicture(passData, after); } catch (e) { b.disabled = false; b.textContent = 'Download e-pass'; alertBox(); }
+    function alertBox() { $('pImgNote').hidden = false; $('pImgNote').textContent = 'The picture could not be made on this phone. Please take a screenshot instead.'; }
+    function after(c) {
+      b.disabled = false; b.textContent = 'Download e-pass';
+      if (cred) window.rsvpCall({ action: 'passdl', emp: cred.emp, nic: cred.nic }, 1);   // counted for HR; never blocks the download
+      var url = c.toDataURL('image/png');
+      var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!iOS) { var a = document.createElement('a'); a.href = url; a.download = file; document.body.appendChild(a); a.click(); a.remove(); }
+      $('pImg').src = url; $('pImg').hidden = false; $('pImgNote').hidden = !iOS;   // also shown, so it can be saved by press-and-hold
+    }
+  });
+  function reset() { $('emp').value = ''; $('nic').value = ''; $('pQr').innerHTML = ''; passData = null; cred = null; show('s1'); }
   $('pDone').addEventListener('click', reset);
   $('mDone').addEventListener('click', reset);
 

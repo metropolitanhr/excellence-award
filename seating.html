@@ -114,7 +114,7 @@ button.auto{font-size:11px;padding:2px 8px}
 <div class="gate" id="gate" hidden><div class="box"><p id="gateMsg">Please log in to the attendance dashboard first.</p><p><a href="admin.html">Go to the dashboard</a></p></div></div>
 <main id="app" hidden>
   <div class="mapwrap">
-    <div class="mapcard"><svg id="map" viewBox="40 8 640 492"></svg></div>
+    <div class="mapcard"><svg id="map" viewBox="16 0 690 660"></svg></div>
     <div class="legend" id="legend"></div>
   </div>
   <aside id="panel"></aside>
@@ -136,19 +136,38 @@ let picked=new Set();   // people ticked for "move selected"
 const ownOf = p => p.og || p.g || 'No group';
 
 // ---------- table positions (fixed, from the venue floor plan; numbered along the table-draw zigzag) ----------
-const POS = {};
-const X = [241,287,334,374,419,464,508];
-const YT = [47,94,132,173,212], YB = [293,333,373,411,457];
-const COLS = [
-  [[66,53,52,39,38],[25,24,12,11,1]],
-  [[65,54,51,40,37],[26,23,13,10,2]],
-  [[64,55,50,41,36],[27,22,14,9,3]],
-  [[63,56,49,42,35],[28,21,15,8,4]],
-  [[62,57,48,43,34],[29,20,16,7,5]],
-  [[61,58,47,44,33],[30,19,17,6]],
-  [[60,59,46,45,32],[31,18]]
-];
-COLS.forEach((c,i)=>{c[0].forEach((t,j)=>POS[t]=[X[i],YT[j]]);c[1].forEach((t,j)=>POS[t]=[X[i],YB[j]]);});
+  // ---------- final hall layout (17 Nov 2026): rows of tables, stage on the left, entry and bars on the right ----------
+  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
+                   [27,28,29,30,31,32,33],[26,25,24,23,22,21,20],[13,14,15,16,17,18,19],[12,11,10,9,8,7],[1,2,3,4,5,6]];
+  var HALL_RY = [118,164,210,256,302,378,424,470,516,562];
+  const POS = {};
+  HALL_ROWS.forEach(function (row, r) { row.forEach(function (t, c) { POS[t] = [228 + c * 46, HALL_RY[r]]; }); });
+  function hallFurniture() {
+    var h = '', box = function (x, y, w, hh, fill, label, size, vertical) {
+      var s = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="4" fill="' + fill + '"/>';
+      if (label) { var cx = x + w / 2, cy = y + hh / 2;
+        s += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" font-size="' + (size || 10) + '" font-weight="700" fill="#fff"' + (vertical ? ' transform="rotate(-90 ' + cx + ' ' + cy + ')"' : '') + '>' + label + '</text>'; }
+      return s; };
+    h += '<rect x="20" y="4" width="680" height="652" rx="8" fill="#fbfaf7" stroke="#bdb9b0" stroke-width="1.5"/>';
+    h += box(150, 14, 420, 30, '#4a7fc1', 'BUFFET', 11);
+    h += box(205, 52, 110, 20, '#4a7fc1', 'CTRL PANEL', 8.5);
+    h += box(216, 78, 24, 18, '#4a7fc1', 'A', 9);
+    h += box(44, 150, 16, 390, '#222', 'LED', 9, true);
+    h += box(62, 150, 62, 390, '#5b8fd6', 'STAGE', 13, true);
+    h += box(128, 150, 62, 390, '#8b6bb0', 'DANCE FLOOR', 13, true);
+    h += box(216, 586, 24, 18, '#4a7fc1', 'A', 9);
+    h += box(150, 614, 420, 30, '#4a7fc1', 'BUFFET', 11);
+    var c = function (x, y) { return '<rect x="' + (x - 9) + '" y="' + (y - 7) + '" width="18" height="14" rx="3" fill="#fff" stroke="#4a7fc1"/><text x="' + x + '" y="' + y + '" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="700" fill="#4a7fc1">C</text>'; };
+    [96, 120, 144].forEach(function (y) { h += c(548, y); });
+    [96, 123, 150, 177, 204, 231, 258, 285, 312].forEach(function (y) { h += c(578, y); });
+    [372, 397, 422, 447, 472, 497, 522, 547, 572].forEach(function (y) { h += c(578, y); });
+    [522, 547, 572].forEach(function (y) { h += c(548, y); });
+    h += box(608, 110, 22, 100, '#2a9fd6', 'BAR', 9, true);
+    h += box(600, 278, 76, 26, '#fff', '', 0); h += '<rect x="600" y="278" width="76" height="26" rx="4" fill="none" stroke="#4a7fc1" stroke-width="1.5"/><text x="638" y="291" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#0A1D4B">ENTRY</text>';
+    h += '<rect x="600" y="314" width="76" height="26" rx="4" fill="#fff" stroke="#4a7fc1" stroke-width="1.5"/><text x="638" y="327" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#0A1D4B">ENTRY</text>';
+    h += box(608, 380, 22, 120, '#2a9fd6', 'BAR', 9, true);
+    return h;
+  }
 const TABLES = Object.keys(POS).map(Number).sort((a,b)=>a-b);
 const color = g => (GBY[g]&&GBY[g].color) || '#9aa0b0';
 
@@ -256,18 +275,7 @@ async function autoSeat(ids){
 // ---------- map ----------
 const svg=$('map'); let svgBuilt=false;
 function buildMap(){
-  let h='';
-  h+=`<rect x="48" y="22" width="560" height="472" rx="6" fill="#fbfaf7" stroke="#bdb9b0" stroke-width="1.5"/>`;
-  h+=`<text x="328" y="16" text-anchor="middle" font-size="10" fill="#888">145 ft</text>`;
-  h+=`<rect x="62" y="93" width="22" height="327" fill="#222"/><text transform="translate(76 256) rotate(-90)" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">LED</text>`;
-  h+=`<rect x="85" y="93" width="62" height="327" fill="#5b8fd6"/><text transform="translate(119 256) rotate(-90)" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">STAGE</text>`;
-  h+=`<rect x="157" y="93" width="62" height="327" fill="#8b6bb0"/><text transform="translate(191 256) rotate(-90)" text-anchor="middle" font-size="12" fill="#fff" font-weight="600">DANCE FLOOR</text>`;
-  h+=`<rect x="547" y="45" width="26" height="115" fill="#5b8fd6"/><text transform="translate(563 102) rotate(90)" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">CTRL PANEL</text>`;
-  h+=`<rect x="547" y="355" width="26" height="60" fill="#5b8fd6"/><text transform="translate(563 385) rotate(90)" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">BAR</text>`;
-  h+=`<rect x="447" y="466" width="62" height="24" fill="#5b8fd6"/><text x="478" y="481" text-anchor="middle" font-size="9" fill="#fff" font-weight="600">BAR</text>`;
-  [190,300].forEach(y=>{ h+=`<path d="M665 ${y} L622 ${y} M630 ${y-6} L620 ${y} L630 ${y+6}" stroke="#5b8fd6" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`; });
-  h+=`<rect x="614" y="168" width="54" height="13" fill="#5b8fd6"/><text x="641" y="177.5" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">REG. TABLE</text>`;
-  h+=`<rect x="614" y="318" width="54" height="13" fill="#5b8fd6"/><text x="641" y="327.5" text-anchor="middle" font-size="7.5" fill="#fff" font-weight="600">REG. TABLE</text>`;
+  let h=hallFurniture();
   TABLES.forEach(t=>{ const [x,y]=POS[t];
     h+=`<g class="tbl" data-t="${t}" data-drop="${t}" transform="translate(${x} ${y})"><title></title><g class="segs"></g><circle r="12.5" fill="#fff"/><text class="num" y="-2.8">${t}</text><text class="cnt" y="7"></text><circle class="ring" r="21"/></g>`; });
   svg.innerHTML=h; svgBuilt=true;

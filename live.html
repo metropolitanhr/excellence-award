@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Live hall · Excellence Awards Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 Manrope,system-ui,sans-serif; background:#EEF0F5; color:#171721; }
+  .top { background:linear-gradient(90deg,#0A1D4B,#14265C 60%,#3A0F2A); color:#F7EBE0; padding:10px 16px; border-bottom:2px solid #CC9E4A; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .top b { font-size:15px; } .top .meta { color:#a7adc4; font-size:12px; } .grow { flex:1; }
+  .top a, .top button { background:transparent; color:#f3f1ea; border:1px solid rgba(255,255,255,.35); border-radius:8px; padding:6px 12px; cursor:pointer; font:inherit; text-decoration:none; }
+  .wrap { max-width:1400px; margin:0 auto; padding:14px 16px 30px; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+  .kpi { background:#fff; border:1px solid #e0e3ec; border-radius:12px; padding:12px 14px; }
+  .kpi .v { font-size:30px; font-weight:700; line-height:1.1; font-variant-numeric:tabular-nums; } .kpi .v small { font-size:15px; color:#5a6077; font-weight:600; }
+  .kpi .l { font-size:12.5px; color:#5a6077; }
+  .bar { height:10px; border-radius:6px; background:#e6e8ef; overflow:hidden; margin-top:8px; } .bar i { display:block; height:100%; background:linear-gradient(90deg,#1F7A50,#2fa36b); }
+  .cols { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:12px; margin-top:12px; }
+  @media (max-width:980px){ .cols { grid-template-columns:1fr; } }
+  .card { background:#fff; border:1px solid #e0e3ec; border-radius:12px; padding:12px; }
+  .card + .card { margin-top:12px; }
+  .card h3 { margin:0 0 8px; font-size:14px; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; } .card h3 span { font-weight:500; color:#5a6077; font-size:12px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:#3a3f52; margin-top:8px; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:-2px; margin-right:5px; }
+  table.g { width:100%; border-collapse:collapse; font-size:12.5px; } table.g td { padding:6px 0; border-top:1px solid #eef0f4; vertical-align:middle; }
+  table.g td.r { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; padding-left:10px; }
+  .mini { height:7px; border-radius:4px; background:#e6e8ef; overflow:hidden; } .mini i { display:block; height:100%; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; } .chip { padding:3px 9px; border-radius:20px; background:#f1f2f6; font-size:12px; font-weight:600; cursor:pointer; border:0; font-family:inherit; }
+  .chip:hover { background:#e2e6f0; }
+  .p { padding:6px 0; border-top:1px solid #eef0f4; display:flex; justify-content:space-between; gap:10px; } .p span { color:#5a6077; font-size:12.5px; }
+  .ok { color:#1F7A50; font-weight:600; }
+  svg g.t { cursor:pointer; } svg g.t.sel circle { stroke:#111 !important; stroke-width:3 !important; stroke-dasharray:none !important; }
+  .gate { display:grid; place-items:center; padding:60px 16px; text-align:center; } .gate .box { background:#fff; border:1px solid #e0e3ec; border-radius:14px; padding:24px; max-width:380px; }
+  .err { color:#c62828; font-weight:600; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="top">
+  <b>Live hall</b><span class="meta" id="meta">Loading…</span><span class="grow"></span>
+  <button id="reload" type="button">Refresh now</button>
+  <a href="seating.html">Seating plan</a><a href="admin.html">Attendance dashboard</a>
+</div>
+<div class="gate" id="gate" hidden><div class="box"><p id="gateMsg">Please log in to the attendance dashboard first.</p><p><a href="admin.html">Go to the dashboard</a></p></div></div>
+<div class="wrap" id="app" hidden>
+  <div class="kpis" id="kpis"></div>
+  <div class="cols">
+    <div class="card">
+      <h3>Hall <span>each table shows arrived / people seated there · click a table to see who is still expected</span></h3>
+      <svg id="map" viewBox="16 0 690 660" style="width:100%;height:auto;display:block" role="img" aria-label="Hall plan with arrivals per table"></svg>
+      <div class="legend"><span><i style="background:#eceef3;border:1px dashed #9aa0b0"></i>No one yet</span><span><i style="background:#cfe9da"></i>Some arrived</span><span><i style="background:#2fa36b"></i>Most arrived</span><span><i style="background:#CC9E4A"></i>Everyone arrived</span><span><i style="background:#fff;border:1px solid #ddd"></i>No one seated</span></div>
+    </div>
+    <div>
+      <div class="card"><h3>By group <span>arrived / expected</span></h3><table class="g" id="groups"></table></div>
+      <div class="card"><h3>Tables nobody has reached yet <span id="emptyN"></span></h3><div class="chips" id="empty"></div></div>
+      <div class="card" id="tCard"><h3 id="tTitle">Click a table</h3><div id="tList"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var TOKEN=null; try{ TOKEN=sessionStorage.getItem('mn_tok'); }catch(e){}
+  // ---------- final hall layout (17 Nov 2026): rows of tables, stage on the left, entry and bars on the right ----------
+  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
+                   [27,28,29,30,31,32,33],[26,25,24,23,22,21,20],[13,14,15,16,17,18,19],[12,11,10,9,8,7],[1,2,3,4,5,6]];
+  var HALL_RY = [118,164,210,256,302,378,424,470,516,562];
+  var POS = {};
+  HALL_ROWS.forEach(function (row, r) { row.forEach(function (t, c) { POS[t] = [228 + c * 46, HALL_RY[r]]; }); });
+  function hallFurniture() {
+    var h = '', box = function (x, y, w, hh, fill, label, size, vertical) {
+      var s = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" rx="4" fill="' + fill + '"/>';
+      if (label) { var cx = x + w / 2, cy = y + hh / 2;
+        s += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="central" font-size="' + (size || 10) + '" font-weight="700" fill="#fff"' + (vertical ? ' transform="rotate(-90 ' + cx + ' ' + cy + ')"' : '') + '>' + label + '</text>'; }
+      return s; };
+    h += '<rect x="20" y="4" width="680" height="652" rx="8" fill="#fbfaf7" stroke="#bdb9b0" stroke-width="1.5"/>';
+    h += box(150, 14, 420, 30, '#4a7fc1', 'BUFFET', 11);
+    h += box(205, 52, 110, 20, '#4a7fc1', 'CTRL PANEL', 8.5);
+    h += box(216, 78, 24, 18, '#4a7fc1', 'A', 9);
+    h += box(44, 150, 16, 390, '#222', 'LED', 9, true);
+    h += box(62, 150, 62, 390, '#5b8fd6', 'STAGE', 13, true);
+    h += box(128, 150, 62, 390, '#8b6bb0', 'DANCE FLOOR', 13, true);
+    h += box(216, 586, 24, 18, '#4a7fc1', 'A', 9);
+    h += box(150, 614, 420, 30, '#4a7fc1', 'BUFFET', 11);
+    var c = function (x, y) { return '<rect x="' + (x - 9) + '" y="' + (y - 7) + '" width="18" height="14" rx="3" fill="#fff" stroke="#4a7fc1"/><text x="' + x + '" y="' + y + '" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="700" fill="#4a7fc1">C</text>'; };
+    [96, 120, 144].forEach(function (y) { h += c(548, y); });
+    [96, 123, 150, 177, 204, 231, 258, 285, 312].forEach(function (y) { h += c(578, y); });
+    [372, 397, 422, 447, 472, 497, 522, 547, 572].forEach(function (y) { h += c(578, y); });
+    [522, 547, 572].forEach(function (y) { h += c(548, y); });
+    h += box(608, 110, 22, 100, '#2a9fd6', 'BAR', 9, true);
+    h += box(600, 278, 76, 26, '#fff', '', 0); h += '<rect x="600" y="278" width="76" height="26" rx="4" fill="none" stroke="#4a7fc1" stroke-width="1.5"/><text x="638" y="291" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#0A1D4B">ENTRY</text>';
+    h += '<rect x="600" y="314" width="76" height="26" rx="4" fill="#fff" stroke="#4a7fc1" stroke-width="1.5"/><text x="638" y="327" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#0A1D4B">ENTRY</text>';
+    h += box(608, 380, 22, 120, '#2a9fd6', 'BAR', 9, true);
+    return h;
+  }
+  var D=null, sel=null, busy=false;
+
+  function clock(iso){ if(!iso) return ''; var d=new Date(iso); return isNaN(d)?'':d.toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Colombo'}); }
+  async function load(){
+    if(!TOKEN){ gate('Please log in to the attendance dashboard first.'); return; }
+    if(busy) return; busy=true;
+    var r = await window.rsvpCall({action:'live', token:TOKEN}, 2);
+    busy=false;
+    if(!r.ok){ if(r.auth===false){ try{sessionStorage.removeItem('mn_tok');}catch(e){} gate(r.error); return; } $('meta').innerHTML='<span class="err">Could not update: '+esc(r.error)+'</span> · trying again in 30 seconds'; return; }
+    D = { people: r.people.map(function(a){ var o={}; r.cols.forEach(function(c,i){o[c]=a[i];}); return o; }), groups:r.groups, generated:r.generated };
+    $('gate').hidden=true; $('app').hidden=false;
+    $('meta').textContent='Updates by itself every 30 seconds · last update '+clock(r.generated);
+    render();
+  }
+  function gate(m){ $('gateMsg').textContent=m||'Please log in.'; $('gate').hidden=false; $('app').hidden=true; $('meta').textContent=''; }
+
+  function render(){
+    var T={}, t; for(t=1;t<=66;t++) T[t]={s:0,a:0};
+    var P=D.people, arr=0, noTable=0, recent=0, now=Date.now();
+    P.forEach(function(p){ if(p.at) arr++; if(p.at && now-new Date(p.at).getTime()<600000) recent++; if(p.t && T[p.t]){ T[p.t].s++; if(p.at) T[p.t].a++; } else noTable++; });
+    var tot=P.length, pct=tot?Math.round(arr/tot*100):0, full=0, empty=[];
+    for(t in T){ if(T[t].s && T[t].a===T[t].s) full++; if(T[t].s && !T[t].a) empty.push(+t); }
+    $('kpis').innerHTML=
+      '<div class="kpi"><div class="v">'+arr+' <small>of '+tot+'</small></div><div class="l">Arrived ('+pct+'%)</div><div class="bar"><i style="width:'+pct+'%"></i></div></div>'+
+      '<div class="kpi"><div class="v">'+(tot-arr)+'</div><div class="l">Still expected</div></div>'+
+      '<div class="kpi"><div class="v">'+full+'</div><div class="l">Tables where everyone arrived</div></div>'+
+      '<div class="kpi"><div class="v">'+empty.length+'</div><div class="l">Tables nobody has reached</div></div>'+
+      '<div class="kpi"><div class="v">'+recent+'</div><div class="l">Arrived in the last 10 minutes</div></div>'+
+      (noTable?'<div class="kpi"><div class="v" style="color:#b26a00">'+noTable+'</div><div class="l">Attending without a table</div></div>':'');
+    var h=hallFurniture();
+    for(t in T){ var p=POS[t]; if(!p) continue; var x=T[t], r=x.s?x.a/x.s:0;
+      var fill=!x.s?'#fff':!x.a?'#eceef3':r>=1?'#CC9E4A':r>=.6?'#2fa36b':'#cfe9da', ink=x.s&&r>=.6&&r<1?'#fff':'#171721', stroke=!x.s?'#ddd':!x.a?'#9aa0b0':'none';
+      h+='<g class="t'+(String(sel)===String(t)?' sel':'')+'" data-t="'+t+'"><title>Table '+t+': '+x.a+' of '+x.s+' arrived</title><circle cx="'+p[0]+'" cy="'+p[1]+'" r="19.5" fill="'+fill+'" stroke="'+stroke+'" stroke-dasharray="'+(!x.a&&x.s?'3 2':'none')+'"/>'+
+        '<text x="'+p[0]+'" y="'+(p[1]-3)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+ink+'">'+t+'</text>'+
+        '<text x="'+p[0]+'" y="'+(p[1]+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+ink+'">'+(x.s?x.a+'/'+x.s:'–')+'</text></g>'; }
+    $('map').innerHTML=h;
+    $('map').querySelectorAll('g.t').forEach(function(g){ g.onclick=function(){ sel=+g.dataset.t; render(); }; });
+    $('groups').innerHTML=D.groups.map(function(g){ var a=0,s=0; P.forEach(function(p){ if(p.t && g.tables.indexOf(+p.t)>=0){ s++; if(p.at) a++; } }); var pc=s?Math.round(a/s*100):0;
+      return '<tr><td style="width:46%"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+g.color+';margin-right:6px"></span>'+esc(g.name)+'</td><td><div class="mini"><i style="width:'+pc+'%;background:'+g.color+'"></i></div></td><td class="r">'+a+' / '+s+'</td></tr>'; }).join('');
+    $('emptyN').textContent=empty.length+(empty.length===1?' table':' tables');
+    $('empty').innerHTML=empty.length?empty.map(function(t){ return '<button class="chip" type="button" data-t="'+t+'">'+t+'</button>'; }).join(''):'<span class="ok">Someone has arrived at every table.</span>';
+    $('empty').querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ sel=+b.dataset.t; render(); }; });
+    if(sel){
+      var here=P.filter(function(p){ return String(p.t)===String(sel); }), left=here.filter(function(p){ return !p.at; }), came=here.filter(function(p){ return p.at; });
+      $('tTitle').innerHTML='Table '+sel+' <span>'+came.length+' of '+here.length+' arrived</span>';
+      $('tList').innerHTML=(left.length?'<div style="font-size:12px;font-weight:700;color:#5a6077;margin:2px 0">STILL EXPECTED</div>'+left.map(function(p){ return '<div class="p"><b style="font-weight:600">'+esc(p.n)+'</b><span>'+esc(p.e)+' · '+esc(p.dp)+'</span></div>'; }).join(''):'<p class="ok" style="margin:0 0 6px">Everyone at this table has arrived.</p>')+
+        (came.length?'<div style="font-size:12px;font-weight:700;color:#5a6077;margin:10px 0 2px">ARRIVED</div>'+came.map(function(p){ return '<div class="p"><span style="color:#171721">'+esc(p.n)+'</span><span>'+clock(p.at)+'</span></div>'; }).join(''):'');
+    }
+  }
+  $('reload').onclick=load;
+  setInterval(function(){ if(document.visibilityState==='visible') load(); },30000);
+  load();
+})();
+</script>
+</body>
+</html>

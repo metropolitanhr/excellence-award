@@ -128,6 +128,7 @@
     <img src="logo.png" alt="" style="height:26px;background:#fff;border-radius:6px;padding:3px 6px"><b>Excellence Awards and Year End Party</b>
     <span class="meta" id="meta"></span>
     <span class="sp"></span>
+    <a href="live.html" style="color:#f3f1ea;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;text-decoration:none">Live hall</a>
     <a id="seatLink" href="seating.html" style="color:#f3f1ea;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 12px;text-decoration:none">Seating plan</a>
     <button id="addBtn" style="background:#CC9E4A;color:#1c1407;border-color:#CC9E4A;font-weight:700">+ Add staff member</button>
     <button id="xlsx">Download Excel</button>
@@ -137,7 +138,8 @@
   <main>
     <div class="ev" id="ev">
       <div class="r"><span class="lab">E-passes</span><b id="evState"></b><span class="sp"></span><button class="btn" id="evToggle" type="button"></button></div>
-      <div class="r"><span class="lab">Scanner link</span><code id="evLink"></code><span>PIN <b id="evPin"></b></span><button class="btn" id="evCopy" type="button">Copy link and PIN</button></div>
+      <div class="r"><span class="lab">Who has their e-pass</span><b id="evCount"></b><span class="sp"></span><button class="btn" id="evNotOpened" type="button">Show who has not opened it</button></div>
+      <div class="r"><span class="lab">Scanner link</span><code id="evLink"></code><span>PIN <b id="evPin"></b></span><button class="btn" id="evCopy" type="button">Copy link and PIN</button><button class="btn" id="evNewPin" type="button">Make new PIN</button></div>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="goal">
@@ -173,6 +175,9 @@
           <option value="admin">Entered by admin</option>
           <option value="arrived">Arrived (checked in)</option>
           <option value="notarrived">Attending, not arrived yet</option>
+          <option value="passopened">Attending, opened e-pass</option>
+          <option value="passdl">Attending, downloaded e-pass</option>
+          <option value="passnot">Attending, not opened e-pass yet</option>
         </select>
         <select id="fDept"><option value="">All departments</option></select>
         <select id="fHod"><option value="">All HODs</option></select>
@@ -294,8 +299,8 @@
       toast(r.error); return;
     }
     S.admin = r.admin; S.sources = r.sources; S.passes = !!r.passes; S.pin = r.pin || ''; S.groups = r.groups || [];
-    renderEvent();
     S.rows = r.rows.map(function (a) { var o = {}; r.cols.forEach(function (c, i) { o[c] = a[i]; }); return o; });
+    renderEvent();
     $('meta').textContent = 'Signed in as ' + r.admin + '. Updated ' + when(r.generated) + '. ' + (r.open ? 'Staff can respond until ' + when(r.deadline) + '.' : 'Closed for staff responses.');
     fillFilters(); render();
   }
@@ -388,6 +393,9 @@
       if (st === 'responded' && !r.status) return false;
       if (st === 'arrived') return !!r.arrived;
       if (st === 'notarrived') return r.status === 'Attending' && !r.arrived;
+      if (st === 'passopened') return r.status === 'Attending' && !!r.passOpened;
+      if (st === 'passdl') return r.status === 'Attending' && !!r.passDl;
+      if (st === 'passnot') return r.status === 'Attending' && !r.passOpened;
       if (st && st !== 'pending' && st !== 'admin' && st !== 'responded' && r.status !== st) return false;
       return true;
     });
@@ -509,8 +517,8 @@
     XL('Excellence-Award-RSVP_' + stamp() + '.xlsx', [
       { name: 'Confirmed (' + conf.length + ')', head: XHEAD.concat(['Response']), widths: [10, 32, 15, 32, 32, 15], rows: conf.map(function (r) { return xrow(r).concat([r.status]); }) },
       { name: 'Not confirmed (' + pend.length + ')', head: XHEAD, widths: [10, 32, 15, 32, 32], rows: pend.map(xrow) },
-      { name: 'Attendance', head: ['Emp No', 'Name', 'Department', 'HOD', 'Table', 'Response', 'Arrived', 'Checked in at', 'How'], widths: [10, 32, 32, 32, 8, 15, 10, 20, 12],
-        rows: S.rows.filter(function (r) { return r.status === 'Attending' || r.arrived; }).sort(bySort).map(function (r) { return [r.emp, r.name, r.dept, r.hod, r.table, r.status, r.arrived ? 'Yes' : 'No', clock(r.arrived), r.arrivedBy]; }) }
+      { name: 'Attendance', head: ['Emp No', 'Name', 'Department', 'HOD', 'Table', 'Response', 'E-pass opened', 'E-pass downloaded', 'Arrived', 'Checked in at', 'How'], widths: [10, 32, 32, 32, 8, 15, 20, 20, 10, 20, 12],
+        rows: S.rows.filter(function (r) { return r.status === 'Attending' || r.arrived; }).sort(bySort).map(function (r) { return [r.emp, r.name, r.dept, r.hod, r.table, r.status, clock(r.passOpened), clock(r.passDl), r.arrived ? 'Yes' : 'No', clock(r.arrived), r.arrivedBy]; }) }
     ]);
     toast('Excel downloaded: ' + conf.length + ' confirmed, ' + pend.length + ' not confirmed.');
   });
@@ -586,13 +594,30 @@
     var day = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Colombo' });
     return day + ', ' + t.replace(':', '.').replace(/\s?am$/i, ' A.M.').replace(/\s?pm$/i, ' P.M.');
   }
-  function scanLink() { return location.href.replace(/admin\.html.*$/, '').replace(/[?#].*$/, '') + 'checkin.html'; }
+  function scanLink() { return location.href.replace(/[?#].*$/, '').replace(/admin\.html$/, '').replace(/\/+$/, '') + '/checkin.html'; }
   function renderEvent() {
     $('evState').innerHTML = S.passes ? '<span class="on">Visible to staff</span> <span class="sub">Attending staff see their QR when they log in.</span>' : '<span class="off">Hidden from staff</span> <span class="sub">Only you can see the QR codes, in View / mark.</span>';
     $('evToggle').textContent = S.passes ? 'Hide e-passes from staff' : 'Show e-passes to staff';
     delete $('evToggle').dataset.armed;
     $('evLink').textContent = scanLink(); $('evPin').textContent = S.pin || '-';
+    var att = S.rows.filter(function (r) { return r.status === 'Attending'; });
+    var op = att.filter(function (r) { return r.passOpened; }).length, dl = att.filter(function (r) { return r.passDl; }).length;
+    $('evCount').innerHTML = 'Opened <span class="on">' + op + '</span> of ' + att.length + ' &middot; Downloaded <span class="on">' + dl + '</span> <span class="sub">Screenshots cannot be counted.</span>';
   }
+  $('evNotOpened').addEventListener('click', function () {
+    var tab = document.querySelector('[data-tab=all]'); if (tab) tab.click();
+    $('q').value = ''; $('fDept').value = ''; $('fHod').value = ''; $('fStatus').value = 'passnot'; renderAll();
+    var t = document.getElementById('at'); if (t) t.scrollIntoView({ behavior: 'smooth' });
+  });
+  $('evNewPin').addEventListener('click', async function () {
+    var b = this;
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again: the old PIN stops working'; setTimeout(function () { delete b.dataset.armed; b.textContent = 'Make new PIN'; }, 4000); return; }
+    delete b.dataset.armed; b.disabled = true;
+    var r = await window.rsvpCall({ action: 'newpin', token: S.token }, 1);
+    b.disabled = false; b.textContent = 'Make new PIN';
+    if (!r.ok) { toast(r.error); return; }
+    S.pin = r.pin; renderEvent(); toast('New PIN ' + r.pin + '. Send it to the entrance team; the old PIN no longer works.');
+  });
   $('evToggle').addEventListener('click', async function () {
     var b = this;
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = S.passes ? 'Click again to hide' : 'Click again to show to all staff'; setTimeout(function () { if (b.dataset.armed) renderEvent(); }, 4000); return; }
