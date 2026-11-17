@@ -251,7 +251,12 @@
 
   <div class="form-col">
     <!-- Step 1: identify -->
-    <section class="glass" id="s1">
+    <!-- Shown for a moment while the page checks whether e-passes are open -->
+    <section class="glass" id="sLoad">
+      <p class="hint" style="text-align:center;margin:8px 0">Loading…</p>
+    </section>
+
+    <section class="glass" id="s1" hidden>
       <p class="step">Step 1 of 2</p>
       <h2>Confirm your participation</h2>
       <p class="hint">Every staff member confirms for themselves. Please respond by <b>28th October 2026</b>.</p>
@@ -353,6 +358,13 @@
       <button class="btn quiet" id="mDone" type="button">Done</button>
     </section>
 
+    <!-- Logged in after the deadline, but no confirmed attendance -->
+    <section class="glass" id="sNoConf" hidden>
+      <h2 id="ncTitle">No confirmed attendance</h2>
+      <p class="hint">We don't have your attendance confirmed, so there is no e-pass for you. If you are attending, please contact HR (2624 - Dakshila).</p>
+      <button class="btn quiet" id="ncDone" type="button">Back</button>
+    </section>
+
     <!-- Closed -->
     <section class="glass" id="sClosed" hidden>
       <h2>Online confirmation has closed</h2>
@@ -373,7 +385,7 @@
   var wide = function () { return window.innerWidth >= 1000; };
 
   function show(id) {
-    ['s1', 's2', 's3', 'sClosed', 'sPass', 'sMiss'].forEach(function (s) { $(s).hidden = s !== id; });
+    ['sLoad', 's1', 's2', 's3', 'sClosed', 'sNoConf', 'sPass', 'sMiss'].forEach(function (s) { $(s).hidden = s !== id; });
     var el = $(id); el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     if (!wide()) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 24), behavior: 'smooth' });
   }
@@ -417,6 +429,7 @@
     if (!r.open) {
       if (r.view === 'pass') { cred = { emp: emp, nic: nic }; showPass(r); return; }
       if (r.view === 'miss') { $('mTitle').textContent = 'We\u2019ll miss you, ' + firstName(r.name); show('sMiss'); return; }
+      if (passesOpen) { $('ncTitle').textContent = 'Hi ' + firstName(r.name) + ', no confirmed attendance'; show('sNoConf'); return; }
       show('sClosed'); return;
     }
     cred = { emp: emp, nic: nic };
@@ -511,6 +524,7 @@
     if (window.QRCode) new QRCode(box, { text: r.pass.code, width: 380, height: 380, colorDark: '#0A1D4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
     else box.textContent = r.pass.code;
     show('sPass');
+    setTimeout(preparePicture, 50);
   }
 
   // ---------- Download e-pass: draws the pass as a picture on the phone ----------
@@ -548,35 +562,85 @@
     img.onerror = finish;
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
   }
+  // The picture is made as soon as the e-pass shows, so pressing Download can save it at once
+  // (iPhones only allow saving straight from the button press).
+  var ready = null;   // { canvas, blob, url }
+  function preparePicture() {
+    ready = null;
+    var who = passData;
+    try {
+      passPicture(who, function (c) {
+        if (passData !== who) return;
+        var done = function (blob) { ready = { canvas: c, blob: blob, url: blob ? URL.createObjectURL(blob) : c.toDataURL('image/png') }; };
+        if (c.toBlob) c.toBlob(done, 'image/png'); else done(null);
+      });
+    } catch (e) { ready = { failed: true }; }
+  }
+  function isIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function showPicture(url, note) {
+    $('pImg').src = url; $('pImg').hidden = false;
+    $('pImgNote').textContent = note || 'If nothing was saved: press and hold the picture above, then choose "Save to Photos".';
+    $('pImgNote').hidden = false;
+  }
   $('pDl').addEventListener('click', function () {
     if (!passData) return;
-    var b = this; b.disabled = true; b.textContent = 'Preparing…';
-    var file = 'E-pass ' + passData.pass.emp + '.png';
-    try { passPicture(passData, after); } catch (e) { b.disabled = false; b.textContent = 'Download e-pass'; alertBox(); }
-    function alertBox() { $('pImgNote').hidden = false; $('pImgNote').textContent = 'The picture could not be made on this phone. Please take a screenshot instead.'; }
-    function after(c) {
-      b.disabled = false; b.textContent = 'Download e-pass';
-      if (cred) window.rsvpCall({ action: 'passdl', emp: cred.emp, nic: cred.nic }, 1);   // counted for HR; never blocks the download
-      var url = c.toDataURL('image/png');
-      var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (!iOS) { var a = document.createElement('a'); a.href = url; a.download = file; document.body.appendChild(a); a.click(); a.remove(); }
-      $('pImg').src = url; $('pImg').hidden = false; $('pImgNote').hidden = !iOS;   // also shown, so it can be saved by press-and-hold
+    var b = this, file = 'E-pass ' + passData.pass.emp + '.png';
+    if (cred) window.rsvpCall({ action: 'passdl', emp: cred.emp, nic: cred.nic }, 1);   // counted for HR; never blocks the download
+    if (!ready) {   // still being made (a second or two): try again shortly
+      b.disabled = true; b.textContent = 'Preparing…';
+      var tries = 0, wait = setInterval(function () {
+        if (ready || ++tries > 40) { clearInterval(wait); b.disabled = false; b.textContent = 'Download e-pass';
+          if (ready && !ready.failed) { saveIt(ready, file, true); }
+          else { $('pImgNote').hidden = false; $('pImgNote').textContent = 'The picture could not be made on this phone. Please take a screenshot instead.'; } }
+      }, 150);
+      return;
     }
+    if (ready.failed) { $('pImgNote').hidden = false; $('pImgNote').textContent = 'The picture could not be made on this phone. Please take a screenshot instead.'; return; }
+    saveIt(ready, file, false);
   });
-  function reset() { $('emp').value = ''; $('nic').value = ''; $('pQr').innerHTML = ''; passData = null; cred = null; show('s1'); }
+  function saveIt(pic, file, late) {
+    if (isIOS()) {
+      // iPhone / iPad: the Share sheet has "Save Image", which saves straight to Photos
+      var f = null;
+      try { if (pic.blob && window.File) f = new File([pic.blob], file, { type: 'image/png' }); } catch (e) { f = null; }
+      if (f && navigator.canShare && navigator.canShare({ files: [f] }) && !late) {
+        navigator.share({ files: [f], title: 'My e-pass' }).then(function () {
+          $('pImgNote').hidden = false; $('pImgNote').textContent = 'Saved. Show it at the entrance (choose "Save Image" if you only shared it).';
+        }).catch(function (err) {
+          if (err && err.name === 'AbortError') return;    // they closed the Share sheet
+          showPicture(pic.url);
+        });
+        return;
+      }
+      if (f && navigator.canShare && navigator.canShare({ files: [f] }) && late) {
+        // the button press has expired on iPhone: ask for one more tap
+        $('pDl').textContent = 'Tap again to save'; setTimeout(function () { $('pDl').textContent = 'Download e-pass'; }, 6000);
+        return;
+      }
+      showPicture(pic.url);
+      return;
+    }
+    var a = document.createElement('a'); a.href = pic.url; a.download = file; document.body.appendChild(a); a.click(); a.remove();
+    showPicture(pic.canvas.toDataURL('image/png'), 'Saved to your Downloads. You can also press and hold the picture above to save it.');
+  }
+  function reset() { $('emp').value = ''; $('nic').value = ''; $('pQr').innerHTML = ''; passData = null; cred = null; ready = null; show('s1'); }
   $('pDone').addEventListener('click', reset);
   $('mDone').addEventListener('click', reset);
+  $('ncDone').addEventListener('click', reset);
 
   // On load: before the deadline nothing changes. After it, show the closed message, or the e-pass login once HR switches it on.
+  var passesOpen = false;
   window.rsvpCall({ action: 'info' }, 2).then(function (r) {
-    if (!r || !r.ok || r.open) return;
+    if (!r || !r.ok || r.open) { show('s1'); return; }   // before the deadline, or the check failed: normal form
     if (!r.passes) { show('sClosed'); return; }
+    passesOpen = true;
     var s1 = $('s1');
     s1.querySelector('.step').textContent = 'Metropolitan Excellence Awards';
     s1.querySelector('h2').textContent = 'Get your e-pass';
     s1.querySelector('.hint').innerHTML = 'Log in with your employee number and the last 4 numbers of your NIC to see your entry QR code' + ' and table number.';
     $('b1').textContent = 'Show my e-pass';
     $('b1').dataset.label = 'Show my e-pass';
+    show('s1');
   });
 })();
 </script>
