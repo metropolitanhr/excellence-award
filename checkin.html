@@ -75,6 +75,10 @@
   .res .btn { margin-top: 22px; background: rgba(255,255,255,.96); color: #12203f; height: 58px; font-size: 18px; }
   .spin { width: 40px; height: 40px; margin: 0 auto 14px; border: 4px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: sp .8s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
+  .sync { padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 12px; white-space: nowrap; background: rgba(31,138,88,.25); border: 1px solid rgba(127,209,166,.45); }
+  .sync.wait { background: rgba(208,145,26,.25); border-color: rgba(240,190,90,.5); }
+  .sync.off { background: rgba(198,44,67,.3); border-color: rgba(255,154,154,.5); }
+  .ready { text-align: center; color: var(--ink-3); font-size: 12.5px; margin: 8px 0 0; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -84,6 +88,7 @@
     <span class="plq"><img src="logo.png" alt="Metropolitan"></span>
     <b>Check-in</b>
     <span class="sp"></span>
+    <span class="sync" id="sync" hidden>✓ Saved</span>
     <span class="chip" id="count" hidden>This phone: 0</span>
   </div>
 
@@ -107,6 +112,7 @@
         <div class="camMsg" id="camMsg" hidden></div>
       </div>
       <p class="tip">Hold the guest's QR code inside the box.</p>
+      <p class="ready" id="ready"></p>
     </div>
     <div id="vSearch" hidden>
       <input class="inp" id="q" type="search" autocomplete="off" placeholder="Employee number or name" style="margin-top:14px">
@@ -129,11 +135,12 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var PIN = '', scanner = null, busy = false, mode = 'scan', count = 0, lastCode = '', lastAt = 0;
-
+  // Guest list kept on this phone: decisions are instant; check-ins go to the server in the background.
+  var G = null, byCode = {}, byEmp = {}, Q = [], sending = false, listAt = 0, autoNext = null;
   function sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
   function sset(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
   function lget(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function lset(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function lset(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function clock(iso) {
     if (!iso) return '';
@@ -143,6 +150,61 @@
   }
   function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
   function setCount(n) { count = n; lset('mea_ci_count', String(n)); $('count').textContent = 'This phone: ' + n; }
+
+  // ---------- guest list ----------
+  function useList(rows, cols) {
+    var ix = {}; cols.forEach(function (c, i) { ix[c] = i; });
+    byCode = {}; byEmp = {};
+    rows.forEach(function (r) {
+      var p = { code: r[ix.code], emp: r[ix.emp], name: r[ix.name], dept: r[ix.dept], table: r[ix.table], status: r[ix.status], arrived: r[ix.arrived] || '' };
+      byCode[String(p.code).toUpperCase()] = p; byEmp[p.emp] = p;
+    });
+    Q.forEach(function (q) { if (byEmp[q.emp] && !byEmp[q.emp].arrived) byEmp[q.emp].arrived = q.at; });   // keep this phone's unsent check-ins
+    G = true; showReady();
+  }
+  function showReady() {
+    var n = 0, a = 0; for (var k in byEmp) { if (byEmp[k].status === 'Attending') { n++; if (byEmp[k].arrived) a++; } }
+    $('ready').textContent = G ? 'Guest list ready: ' + a + ' of ' + n + ' arrived (all phones)' : '';
+  }
+  async function loadList(quiet) {
+    var r = await window.rsvpCall({ action: 'guestlist', pin: PIN }, 2);
+    if (!r.ok) {
+      if (r.pin === false) return badPin(r.error);
+      if (!quiet && !G) $('ready').textContent = 'Could not get the guest list yet. Scanning still works, a little slower. Retrying…';
+      return false;
+    }
+    useList(r.rows, r.cols); listAt = Date.now();
+    lset('mea_gl', JSON.stringify({ at: listAt, cols: r.cols, rows: r.rows }));
+    return true;
+  }
+  async function loadArrivals() {
+    var r = await window.rsvpCall({ action: 'arrivals', pin: PIN }, 1);
+    if (!r || !r.ok) { if (r && r.pin === false) badPin(r.error); return; }
+    r.list.forEach(function (x) { var p = byEmp[x[0]]; if (p && !p.arrived) p.arrived = x[1]; });
+    showReady();
+  }
+
+  // ---------- background sending (kept on the phone until the server has it) ----------
+  function saveQ() { lset('mea_q', JSON.stringify(Q)); showSync(); }
+  function showSync(off) {
+    var el = $('sync'); el.hidden = false;
+    if (off) { el.className = 'sync off'; el.textContent = '⚠ ' + Q.length + ' not sent · no connection'; return; }
+    if (Q.length) { el.className = 'sync wait'; el.textContent = '⟳ Sending ' + Q.length; }
+    else { el.className = 'sync'; el.textContent = '✓ All saved'; }
+  }
+  async function pump() {
+    if (sending || !Q.length) return;
+    sending = true;
+    while (Q.length) {
+      var q = Q[0];
+      var r = await window.rsvpCall({ action: 'checkinq', pin: PIN, emp: q.emp, at: q.at, how: q.how }, 2);
+      if (r && r.ok) { Q.shift(); saveQ(); continue; }                  // saved (or another phone had it first)
+      if (r && r.pin === false) { sending = false; badPin(r.error); return; }
+      showSync(true); break;                                           // no connection: try again shortly
+    }
+    sending = false;
+  }
+  function queue(emp, how) { Q.push({ emp: emp, at: new Date().toISOString(), how: how }); saveQ(); pump(); }
 
   // ---------- PIN ----------
   $('pin').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
@@ -156,13 +218,38 @@
     if (!r.ok) { $('pe').textContent = r.error || 'Could not check the PIN.'; return; }
     PIN = p; sset('mea_pin', p); begin();
   });
-  $('out').addEventListener('click', function (e) { e.preventDefault(); sset('mea_pin', null); location.reload(); });
-
+  $('out').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (Q.length && !confirmOut()) return;
+    sset('mea_pin', null); location.reload();
+  });
+  function confirmOut() {
+    if ($('out').dataset.armed) return true;
+    $('out').dataset.armed = '1'; $('out').textContent = Q.length + ' not sent yet. Tap again to log out anyway';
+    setTimeout(function () { delete $('out').dataset.armed; $('out').textContent = 'Log out'; }, 5000);
+    return false;
+  }
+  function badPin(msg) {
+    sset('mea_pin', null);
+    showRes('bad', '<div class="icon">!</div><div class="big">PIN no longer valid</div><div class="act">' + esc(msg || 'Ask HR for the new PIN.') + (Q.length ? '<br>' + Q.length + ' check-ins on this phone are kept and will be sent after you log in again.' : '') + '</div>', false, function () { location.reload(); });
+    return false;
+  }
   function begin() {
     $('vPin').hidden = true; $('vMain').hidden = false; $('count').hidden = false;
     setCount(parseInt(lget('mea_ci_count') || '0', 10) || 0);
+    try { Q = JSON.parse(lget('mea_q') || '[]') || []; } catch (e) { Q = []; }
+    try { var c = JSON.parse(lget('mea_gl') || 'null'); if (c && c.rows && Date.now() - c.at < 24 * 3600 * 1000) useList(c.rows, c.cols); } catch (e) {}
+    showSync();
     try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {}
     setMode('scan');
+    loadList().then(function () { pump(); });
+    setInterval(function () { pump(); }, 5000);
+    setInterval(function () { if (document.visibilityState === 'visible') loadArrivals(); }, 30000);
+    setInterval(function () { if (document.visibilityState === 'visible') loadList(true); }, 5 * 60000);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') { pump(); if (Date.now() - listAt > 60000) loadArrivals(); }
+      try { if (document.visibilityState === 'visible' && navigator.wakeLock) navigator.wakeLock.request('screen').catch(function () {}); } catch (e) {}
+    });
   }
 
   // ---------- camera ----------
@@ -174,45 +261,46 @@
   }
   function startCam() {
     if (!window.Html5Qrcode) { camError('The scanner could not load. Check the internet connection and reload the page.'); return; }
-    if (!scanner) scanner = new Html5Qrcode('reader', { verbose: false });
+    if (!scanner) scanner = new Html5Qrcode('reader', { verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } });
     if (scanner.isScanning) return;
-    var box = Math.min(250, Math.floor(Math.min(window.innerWidth - 60, 320) * 0.8));
-    scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: box, height: box }, aspectRatio: 1 }, onCode, function () {})
+    var box = Math.min(260, Math.floor(Math.min(window.innerWidth - 60, 320) * 0.82));
+    scanner.start({ facingMode: 'environment' }, { fps: 15, qrbox: { width: box, height: box }, aspectRatio: 1 }, onCode, function () {})
       .catch(function () { camError('The camera did not start. Allow camera access for this page (tap the icon next to the web address), then try again.'); });
   }
   function stopCam() { if (scanner && scanner.isScanning) return scanner.stop().catch(function () {}); return Promise.resolve(); }
   function pauseCam() { try { if (scanner && scanner.isScanning) scanner.pause(true); } catch (e) {} }
   function resumeCam() { try { if (scanner && mode === 'scan') scanner.resume(); } catch (e) {} }
-
   function onCode(text) {
     if (busy) return;
     var now = Date.now();
-    if (text === lastCode && now - lastAt < 2500) return;   // same code still in front of the camera
+    if (text === lastCode && now - lastAt < 3000) return;   // same code still in front of the camera
     lastCode = text; lastAt = now;
     busy = true; pauseCam();
-    send({ action: 'scan', pin: PIN, code: text });
+    var code = String(text || '').trim().toUpperCase(), p = byCode[code];
+    if (p) { decide(p, 'QR scan'); return; }
+    if (G && !/^MEA1-\d{6}-[0-9A-F]{10}$/.test(code)) { result('invalid', null); return; }   // not our pass at all
+    send({ action: 'scan', pin: PIN, code: text });          // not in the list yet (added in the last minutes): ask the server
   }
 
-  // ---------- results ----------
-  async function send(payload) {
-    showRes('wait', '<div class="spin"></div><div class="big">Checking…</div>', true);
-    var r = await window.rsvpCall(payload, 2);
-    if (!r.ok) {
-      if (r.pin === false) { sset('mea_pin', null); showRes('bad', '<div class="icon">!</div><div class="big">PIN no longer valid</div><div class="act">' + esc(r.error || '') + '</div>', false, function () { location.reload(); }); return; }
-      buzz([60, 60, 60]);
-      showRes('bad', '<div class="icon">!</div><div class="big">Could not check</div><div class="act">' + esc(r.error || 'No connection.') + '<br>Check mobile data and try again.</div>');
-      return;
-    }
-    var p = r.person || {};
+  // ---------- deciding (on the phone, instant) ----------
+  function decide(p, how) {
+    if (p.status !== 'Attending') { result('notattending', p); return; }
+    if (p.arrived) { result('already', p); return; }
+    p.arrived = new Date().toISOString();
+    queue(p.emp, how);
+    result('ok', p); showReady();
+  }
+  function result(kind, p) {
+    p = p || {};
     var who = p.name ? '<div class="name">' + esc(p.name) + '</div><div class="det">' + esc(p.emp) + (p.dept ? ' · ' + esc(p.dept) : '') + '</div>' : '';
-    if (r.result === 'ok') {
+    if (kind === 'ok') {
       setCount(count + 1); buzz(120);
       var tbl = p.table ? '<div class="tbl"><small>TABLE</small><b>' + esc(p.table) + '</b></div>' : '';
-      showRes('ok', '<div class="icon">✓</div><div class="big">Welcome</div>' + who + tbl + '<div class="act">Hand over the tag' + (p.table ? ' and show the way to table ' + esc(p.table) : '') + '.</div>');
-    } else if (r.result === 'already') {
+      showRes('ok', '<div class="icon">✓</div><div class="big">Welcome</div>' + who + tbl + '<div class="act">Hand over the tag' + (p.table ? ' and show the way to table ' + esc(p.table) : '') + '.</div>', false, null, 4000);
+    } else if (kind === 'already') {
       buzz([60, 60, 60]);
       showRes('warn', '<div class="icon">!</div><div class="big">Already checked in</div>' + who + '<div class="act">Checked in at ' + esc(clock(p.arrived)) + '.<br>Ask the guest their name. If it does not match the name above, send them to the HR desk.</div>');
-    } else if (r.result === 'notattending') {
+    } else if (kind === 'notattending') {
       buzz([60, 60, 60]);
       var why = p.status === 'Not attending' ? 'Marked as not attending.' : 'Did not confirm participation.';
       showRes('bad', '<div class="icon">✕</div><div class="big">Not on the attending list</div>' + who + '<div class="act">' + why + '<br>Please send them to the HR desk.</div>');
@@ -221,24 +309,50 @@
       showRes('bad', '<div class="icon">✕</div><div class="big">Not a valid pass</div><div class="act">This QR code is not from our system.<br>Please send the guest to the HR desk.</div>');
     }
   }
-  function showRes(cls, html, noBtn, onNext) {
+  // Online check, used only when the guest list does not know the person yet
+  async function send(payload) {
+    showRes('wait', '<div class="spin"></div><div class="big">Checking…</div>', true);
+    var r = await window.rsvpCall(payload, 2);
+    if (!r.ok) {
+      if (r.pin === false) { badPin(r.error); return; }
+      buzz([60, 60, 60]);
+      showRes('bad', '<div class="icon">!</div><div class="big">Could not check</div><div class="act">' + esc(r.error || 'No connection.') + '<br>Check mobile data and try again, or use Search.</div>');
+      return;
+    }
+    var p = r.person || {};
+    if (p.emp) { byEmp[p.emp] = byEmp[p.emp] || p; if (r.result === 'ok' || r.result === 'already') byEmp[p.emp].arrived = p.arrived || new Date().toISOString(); }
+    result(r.result === 'ok' ? 'ok' : r.result === 'already' ? 'already' : r.result === 'notattending' ? 'notattending' : 'invalid', p);
+    if (r.result === 'ok') loadList(true);      // pick up the newly added person for next time
+  }
+  function showRes(cls, html, noBtn, onNext, autoMs) {
+    clearTimeout(autoNext);
     $('res').className = 'res ' + cls;
     $('resIn').innerHTML = html + (noBtn ? '' : '<button class="btn" type="button" id="next">Next guest</button>');
     $('res').hidden = false;
-    if (!noBtn) $('next').onclick = function () { $('res').hidden = true; busy = false; if (onNext) onNext(); else if (mode === 'scan') resumeCam(); else search(); };
+    if (noBtn) return;
+    var next = function () { clearTimeout(autoNext); $('res').hidden = true; busy = false; if (onNext) onNext(); else if (mode === 'scan') resumeCam(); else search(); };
+    $('next').onclick = next;
+    if (autoMs) autoNext = setTimeout(next, autoMs);   // a welcome closes by itself so the next guest can scan
   }
 
-  // ---------- search ----------
+  // ---------- search (on the phone, instant) ----------
   var tmr = null;
-  $('q').addEventListener('input', function () { clearTimeout(tmr); tmr = setTimeout(search, 350); });
+  $('q').addEventListener('input', function () { clearTimeout(tmr); tmr = setTimeout(search, 150); });
   async function search() {
-    var q = $('q').value.trim();
+    var q = $('q').value.trim().toLowerCase();
     if (q.length < 2) { $('list').innerHTML = '<p class="empty">Type at least 2 letters or numbers.</p>'; return; }
-    var r = await window.rsvpCall({ action: 'find', pin: PIN, q: q }, 2);
-    if (q !== $('q').value.trim()) return;
-    if (!r.ok) { $('list').innerHTML = '<p class="empty">' + esc(r.error || 'Could not search.') + '</p>'; return; }
-    if (!r.list.length) { $('list').innerHTML = '<p class="empty">No one found. Check the spelling, or send the guest to the HR desk.</p>'; return; }
-    $('list').innerHTML = r.list.map(function (p) {
+    var list;
+    if (G) {
+      var digits = /^\d+$/.test(q);
+      list = []; for (var k in byEmp) { var p = byEmp[k]; if (digits ? p.emp.indexOf(q) >= 0 : String(p.name).toLowerCase().indexOf(q) >= 0) list.push(p); if (list.length >= 15) break; }
+    } else {
+      var r = await window.rsvpCall({ action: 'find', pin: PIN, q: q }, 2);
+      if (q !== $('q').value.trim().toLowerCase()) return;
+      if (!r.ok) { $('list').innerHTML = '<p class="empty">' + esc(r.error || 'Could not search.') + '</p>'; return; }
+      list = r.list;
+    }
+    if (!list.length) { $('list').innerHTML = '<p class="empty">No one found. Check the spelling, or send the guest to the HR desk.</p>'; return; }
+    $('list').innerHTML = list.map(function (p) {
       var right = p.status !== 'Attending' ? '<span class="st no">' + (p.status === 'Not attending' ? 'Not attending' : 'Not confirmed') + '</span>'
         : p.arrived ? '<span class="st in">In at ' + esc(clock(p.arrived)) + '</span>'
         : '<button type="button" data-emp="' + esc(p.emp) + '">Check in</button>';
@@ -247,7 +361,9 @@
   }
   $('list').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-emp]'); if (!b || busy) return;
-    busy = true; send({ action: 'checkin', pin: PIN, emp: b.dataset.emp });
+    busy = true;
+    var p = byEmp[b.dataset.emp];
+    if (G && p) decide(p, 'Search'); else send({ action: 'checkin', pin: PIN, emp: b.dataset.emp });
   });
 
   // ---------- tabs ----------
@@ -260,7 +376,6 @@
   }
   $('tScan').addEventListener('click', function () { if (mode !== 'scan') setMode('scan'); });
   $('tSearch').addEventListener('click', function () { if (mode !== 'search') setMode('search'); });
-
   var saved = sget('mea_pin');
   if (saved) { PIN = saved; begin(); }
 })();
