@@ -128,7 +128,7 @@ button.auto{font-size:11px;padding:2px 8px}
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let TOKEN = null; try{ TOKEN = sessionStorage.getItem('mn_tok'); }catch(e){}
-let CAP = 10, TCOUNT = 66, GROUPS = [], GBY = {}, SPARE = [66];
+let CAP = 10, TCOUNT = 67, GROUPS = [], GBY = {}, SPARE = [66, 67];
 let P = [];                 // people: {id,e,n,d,dp,h,g,t,st,arr}
 let S = { tables:{}, un:[] };
 let sel=null, filter=null, hits=new Set(), flashPid=null, history=[], pending=0, loadedAt=null;
@@ -137,7 +137,7 @@ const ownOf = p => p.og || p.g || 'No group';
 
 // ---------- table positions (fixed, from the venue floor plan; numbered along the table-draw zigzag) ----------
   // ---------- final hall layout (17 Nov 2026): rows of tables, stage on the left, entry and bars on the right ----------
-  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
+  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60,67],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
                    [27,28,29,30,31,32,33],[26,25,24,23,22,21,20],[13,14,15,16,17,18,19],[12,11,10,9,8,7],[1,2,3,4,5,6]];
   var HALL_RY = [118,164,210,256,302,378,424,470,516,562];
   const POS = {};
@@ -180,7 +180,7 @@ async function load(quiet){
     if(r.auth===false){ try{sessionStorage.removeItem('mn_tok');}catch(e){} showGate(r.error); return; }
     setStatus('Could not load','bad'); toast(r.error,true); return;
   }
-  CAP=r.seats||10; TCOUNT=r.tables||66; GROUPS=r.groups||[]; SPARE=r.spare||[66];
+  CAP=r.seats||10; TCOUNT=r.tables||67; GROUPS=r.groups||[]; SPARE=r.spare||[66, 67];
   GBY={}; GROUPS.forEach(g=>GBY[g.name]=g);
   P = r.people.map((a,i)=>{ const o={id:i}; r.cols.forEach((c,j)=>o[c]=a[j]); return o; });
   S = { tables:{}, un:[] };

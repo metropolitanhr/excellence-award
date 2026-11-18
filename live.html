@@ -70,7 +70,7 @@
   var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var TOKEN=null; try{ TOKEN=sessionStorage.getItem('mn_tok'); }catch(e){}
   // ---------- final hall layout (17 Nov 2026): rows of tables, stage on the left, entry and bars on the right ----------
-  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
+  var HALL_ROWS = [[66,65,64,63,62,61],[55,56,57,58,59,60,67],[54,53,52,51,50,49,48],[41,42,43,44,45,46,47],[40,39,38,37,36,35,34],
                    [27,28,29,30,31,32,33],[26,25,24,23,22,21,20],[13,14,15,16,17,18,19],[12,11,10,9,8,7],[1,2,3,4,5,6]];
   var HALL_RY = [118,164,210,256,302,378,424,470,516,562];
   var POS = {};
@@ -118,7 +118,7 @@
   function gate(m){ $('gateMsg').textContent=m||'Please log in.'; $('gate').hidden=false; $('app').hidden=true; $('meta').textContent=''; }
 
   function render(){
-    var T={}, t; for(t=1;t<=66;t++) T[t]={s:0,a:0};
+    var T={}, t; for(t=1;t<=67;t++) T[t]={s:0,a:0};
     var P=D.people, arr=0, noTable=0, recent=0, now=Date.now();
     P.forEach(function(p){ if(p.at) arr++; if(p.at && now-new Date(p.at).getTime()<600000) recent++; if(p.t && T[p.t]){ T[p.t].s++; if(p.at) T[p.t].a++; } else noTable++; });
     var tot=P.length, pct=tot?Math.round(arr/tot*100):0, full=0, empty=[];
